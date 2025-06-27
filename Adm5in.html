@@ -26,7 +26,10 @@
       <span id="loadInfo" class="ms-3 fw-bold"></span>
     </div>
   
-    
+    <div class="mb-4">
+      <input type="number" id="deleteCount" class="form-control d-inline-block w-auto me-2" placeholder="Number to delete">
+      <button class="btn btn-danger" onclick="deleteOldestEntries()">Delete Oldest</button>
+    </div>
 
     <h2>Live Firestore Data</h2>
     <div class="table-responsive">
