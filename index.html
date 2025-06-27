@@ -1,143 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Multi-Match Predictor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <title>Virtual Soccer Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .streak-W { color: green; font-weight: bold; }
-    .streak-D { color: orange; font-weight: bold; }
-    .streak-L { color: red; font-weight: bold; }
-    .confidence-high { color: green; }
-    .confidence-medium { color: orange; }
-    .confidence-low { color: red; }
-    .match-card { transition: all 0.3s ease; }
-    .match-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    body { background-color: #f8f9fa; }
+    textarea { height: 180px; font-family: monospace; }
+    pre {
+      background-color: #fff;
+      padding: 1rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .badge-counter {
+      font-size: 1rem;
+      padding: 0.4em 0.7em;
+      background-color: #0d6efd;
+    }
   </style>
 </head>
-<body class="bg-light py-4">
-  <div class="container">
-    <h2 class="text-center mb-4">⚽ Multi-Match Predictor</h2>
+<button onclick="location.href='Adm5in.html'" 
+        style="position: absolute; top: 70px; right: 10px; 
+               background-color: #4CAF50; color: white; 
+               padding: 10px 20px; border: none; 
+               border-radius: 5px; cursor: pointer; 
+               font-family: Arial, sans-serif;">
+  Go to Admin5
+</button>
+<body class="py-4">
+<div class="container">
+  <h1 class="mb-2 text-primary">⚽ Virtual Soccer Analyzer</h1>
 
-    <!-- Match Inputs -->
-    <div class="row mb-4">
-      <!-- Match Set 1 -->
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <label class="form-label fw-bold">Match Set 1 (Oldest)</label>
-            <textarea id="matchInput1" class="form-control" rows="6" placeholder="Team A&#10;1&#10;2&#10;Team B"></textarea>
-          </div>
-        </div>
-      </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <small class="text-muted">🔁 Version: <strong>v1.1 - June 2025</strong></small>
+    <span class="text-success" id="newlyAddedNote"></span>
+  </div>
 
-      <!-- Match Set 2 -->
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <label class="form-label fw-bold">Match Set 2</label>
-            <textarea id="matchInput2" class="form-control" rows="6"></textarea>
-          </div>
-        </div>
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Fixtures and Odds</label>
+      <div id="fixtureFields">
+        <textarea class="form-control mb-2 fixture-input" placeholder="Paste fixtures here..."></textarea>
       </div>
-
-      <!-- Match Set 3 -->
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <label class="form-label fw-bold">Match Set 3</label>
-            <textarea id="matchInput3" class="form-control" rows="6"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Match Set 4 -->
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <label class="form-label fw-bold">Match Set 4</label>
-            <textarea id="matchInput4" class="form-control" rows="6"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Match Set 5 -->
-      <div class="col-12 mb-3">
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <label class="form-label fw-bold">Match Set 5 (Newest)</label>
-            <textarea id="matchInput5" class="form-control" rows="6"></textarea>
-          </div>
-        </div>
-      </div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="addFixtureField()">+ Add Fixtures</button>
     </div>
-
-    <!-- Action Buttons -->
-    <div class="row g-2 mb-4">
-      <div class="col-md-4">
-        <button class="btn btn-success w-100" onclick="loadAllMatches()">✅ Load Matches</button>
+    <div class="col-md-6">
+      <label class="form-label">Match Results</label>
+      <div id="resultFields">
+        <textarea class="form-control mb-2 result-input" placeholder="Paste results here..."></textarea>
       </div>
-      <div class="col-md-4">
-        <button class="btn btn-warning w-100" onclick="shiftMatches()">🔄 Shift Matches</button>
-      </div>
-      <div class="col-md-4">
-        <button class="btn btn-danger w-100" onclick="resetSystem()">🔁 Reset</button>
-      </div>
-    </div>
-
-    <!-- Team Selection -->
-    <div class="row g-2 mb-3">
-      <div class="col-md-6">
-        <label class="form-label">Team A</label>
-        <select class="form-select" id="teamA"></select>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Team B</label>
-        <select class="form-select" id="teamB"></select>
-      </div>
-    </div>
-
-    <!-- Predict Buttons -->
-    <div class="row g-2 mb-3">
-      <div class="col-md-6">
-        <button class="btn btn-primary w-100" onclick="predictMatch()">🔮 Predict Match</button>
-      </div>
-      <div class="col-md-6">
-        <button class="btn btn-info w-100" onclick="analyzeExtraMarkets()">📋 Market Analysis</button>
-      </div>
-    </div>
-
-    <!-- Prediction Result -->
-    <div id="predictionResult" class="card mb-4 d-none">
-      <div class="card-body"></div>
-    </div>
-
-    <!-- Team Comparison Toggle -->
-    <div class="form-check form-switch mb-3">
-      <input class="form-check-input" type="checkbox" id="toggleComparison" onchange="toggleComparison()">
-      <label class="form-check-label" for="toggleComparison">Show Team Comparison</label>
-    </div>
-    
-    <!-- Team Comparison Box -->
-    <div id="comparisonBox" class="d-none mt-4">
-      <h4 class="mb-3">📊 Team Comparison</h4>
-      <div class="row" id="comparisonContent"></div>
-    </div>
-
-    <!-- Match History -->
-    <div class="card mt-4">
-      <div class="card-header">
-        <h5 class="mb-0">📋 Match History</h5>
-      </div>
-      <div class="card-body">
-        <div class="row" id="matchHistory"></div>
-      </div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="addResultField()">+ Add Results</button>
     </div>
   </div>
-<script src="script.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button class="btn btn-primary" onclick="analyzeAndSave()">Analyze & Save</button>
+    <button class="btn btn-warning" onclick="clearInputs()">Clear Inputs</button>
+    <button class="btn btn-danger" onclick="clearStored()">Clear Stored Data</button>
+    <button class="btn btn-success" onclick="copyOutput()">📋 Copy All</button>
+    <button class="btn btn-success" onclick="copyNewMatches()">📋 Copy New Only</button>
+  </div>
 
+  <div class="mb-3">
+    <label for="search" class="form-label">Search Results</label>
+    <input type="text" class="form-control" id="search" placeholder="Search team, result, odds..." oninput="searchResults()">
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="mb-0">Match Analysis</h4>
+    <span class="badge text-bg-primary badge-counter">Matches: <span id="matchCount">0</span></span>
+  </div>
+
+  <pre id="output">No analysis yet.</pre>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let allMatches = JSON.parse(localStorage.getItem("allMatches") || "[]");
+
+function parseFixtures(raw) {
+  const lines = raw.trim().split("\n").filter(l => l.trim() !== "");
+  const fixtures = [];
+  for (let i = 0; i < lines.length; i += 8) {
+    fixtures.push({
+      home: lines[i],
+      away: lines[i + 1],
+      odds: {
+        "1": parseFloat(lines[i + 3]),
+        "X": parseFloat(lines[i + 5]),
+        "2": parseFloat(lines[i + 7])
+      }
+    });
+  }
+  return fixtures;
+}
+
+function parseResults(raw) {
+  const lines = raw.trim().split("\n").filter(l => l.trim() !== "");
+  const results = [];
+  for (let i = 0; i < lines.length; i += 4) {
+    results.push({
+      home: lines[i],
+      homeScore: parseInt(lines[i + 1]),
+      awayScore: parseInt(lines[i + 2]),
+      away: lines[i + 3]
+    });
+  }
+  return results;
+}
+
+function getCombinedTextareaValues(selector) {
+  return Array.from(document.querySelectorAll(selector))
+    .map(el => el.value.trim())
+    .filter(val => val !== "")
+    .join("\n");
+}
+
+function addFixtureField() {
+  const container = document.getElementById("fixtureFields");
+  const textarea = document.createElement("textarea");
+  textarea.className = "form-control mb-2 fixture-input";
+  textarea.placeholder = "Paste more fixtures...";
+  container.appendChild(textarea);
+}
+
+function addResultField() {
+  const container = document.getElementById("resultFields");
+  const textarea = document.createElement("textarea");
+  textarea.className = "form-control mb-2 result-input";
+  textarea.placeholder = "Paste more results...";
+  container.appendChild(textarea);
+}
+
+function analyzeAndSave() {
+  const fixtureText = getCombinedTextareaValues(".fixture-input");
+  const resultText = getCombinedTextareaValues(".result-input");
+
+  localStorage.setItem("fixtures", fixtureText);
+  localStorage.setItem("results", resultText);
+
+  const fixtures = parseFixtures(fixtureText);
+  const results = parseResults(resultText);
+
+  const storedMatchKeys = new Set(allMatches.map(m => `${m.home}-${m.away}-${m.result}`.toLowerCase()));
+  const newMatches = [];
+
+  fixtures.forEach(fix => {
+    const res = results.find(r =>
+      r.home.toLowerCase() === fix.home.toLowerCase() &&
+      r.away.toLowerCase() === fix.away.toLowerCase()
+    );
+
+    if (!res) return;
+
+    let outcome = '';
+    if (res.homeScore > res.awayScore) outcome = '1';
+    else if (res.homeScore < res.awayScore) outcome = '2';
+    else outcome = 'X';
+
+    const matchKey = `${fix.home}-${fix.away}-${res.homeScore}-${res.awayScore}`.toLowerCase();
+    if (!storedMatchKeys.has(matchKey)) {
+      const matchString = `🏟️ ${fix.home} vs ${fix.away}
+➡️ Result: ${res.homeScore} - ${res.awayScore}
+✅ Outcome: ${outcome}
+🔢 Odds: 1 @ ${fix.odds["1"]}, X @ ${fix.odds["X"]}, 2 @ ${fix.odds["2"]}
+-----------------------------`;
+
+      const matchData = {
+        home: fix.home,
+        away: fix.away,
+        outcome,
+        result: `${res.homeScore}-${res.awayScore}`,
+        odds: fix.odds,
+        raw: matchString,
+        timestamp: Date.now()
+      };
+
+      allMatches.push(matchData);
+      newMatches.push(matchData);
+    }
+  });
+
+  localStorage.setItem("allMatches", JSON.stringify(allMatches));
+  document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n") || "No analysis yet.";
+  document.getElementById("matchCount").textContent = allMatches.length;
+
+  const newlyAddedNote = document.getElementById("newlyAddedNote");
+  if (newMatches.length > 0) {
+    newlyAddedNote.textContent = `✅ Added ${newMatches.length} new match${newMatches.length > 1 ? "es" : ""}`;
+    setTimeout(() => newlyAddedNote.textContent = "", 5000);
+  } else {
+    newlyAddedNote.textContent = "⚠️ No new matches found";
+    setTimeout(() => newlyAddedNote.textContent = "", 5000);
+  }
+}
+
+function copyOutput() {
+  const text = document.getElementById("output").textContent.trim();
+  const matchCount = (text.match(/🏟️/g) || []).length;
+
+  if (text === "" || matchCount === 0) {
+    alert("⚠️ No match data to copy.");
+    return;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert(`✅ Copied ${matchCount} match${matchCount > 1 ? "es" : ""} to clipboard.`);
+  }).catch(() => {
+    alert("❌ Failed to copy text.");
+  });
+}
+
+function copyNewMatches() {
+  const lastCopiedTimestamp = parseInt(localStorage.getItem("lastCopied") || "0");
+
+  const newMatches = allMatches.filter(m => m.timestamp && m.timestamp > lastCopiedTimestamp);
+
+  if (newMatches.length === 0) {
+    alert("✅ No new matches to copy.");
+    return;
+  }
+
+  const textToCopy = newMatches.map(m => m.raw).join("\n");
+
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    alert(`✅ Copied ${newMatches.length} new match${newMatches.length > 1 ? "es" : ""}.`);
+    const newestTimestamp = Math.max(...newMatches.map(m => m.timestamp));
+    localStorage.setItem("lastCopied", newestTimestamp.toString());
+  }).catch(() => {
+    alert("❌ Failed to copy.");
+  });
+}
+
+function searchResults() {
+  const term = document.getElementById("search").value.toLowerCase();
+  const filtered = allMatches.filter(m =>
+    (m.home + m.away + m.result + m.outcome + JSON.stringify(m.odds)).toLowerCase().includes(term)
+  );
+  const display = filtered.map(m => m.raw).join("\n");
+  document.getElementById("output").textContent = display || "No matches found.";
+  document.getElementById("matchCount").textContent = filtered.length;
+}
+
+function clearInputs() {
+  if (!confirm("Clear just the input fields?")) return;
+  document.querySelectorAll(".fixture-input, .result-input").forEach(t => t.value = "");
+  document.getElementById("search").value = "";
+  document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n") || "No analysis yet.";
+  document.getElementById("matchCount").textContent = allMatches.length;
+}
+
+function clearStored() {
+  if (!confirm("Clear everything including stored match history?")) return;
+  localStorage.removeItem("fixtures");
+  localStorage.removeItem("results");
+  localStorage.removeItem("allMatches");
+  localStorage.removeItem("lastCopied");
+  document.querySelectorAll(".fixture-input, .result-input").forEach(t => t.value = "");
+  document.getElementById("search").value = "";
+  document.getElementById("output").textContent = "No analysis yet.";
+  document.getElementById("matchCount").textContent = "0";
+  allMatches = [];
+}
+
+window.onload = () => {
+  const savedFixtures = localStorage.getItem("fixtures");
+  const savedResults = localStorage.getItem("results");
+  const savedMatchData = localStorage.getItem("allMatches");
+
+  if (savedFixtures) document.querySelector(".fixture-input").value = savedFixtures;
+  if (savedResults) document.querySelector(".result-input").value = savedResults;
+  if (savedMatchData) {
+    allMatches = JSON.parse(savedMatchData);
+    document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n");
+    document.getElementById("matchCount").textContent = allMatches.length;
+  }
+};
+</script>
 </body>
-</html>
+  </html>
