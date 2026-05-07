@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bett Officials — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════
+   DARK TOKENS (default)
+══════════════════════════════════════════════════════ */
+:root {
+  --bg:      #060910;
+  --s1:      #0c1220;
+  --s2:      #111c2e;
+  --s3:      #182338;
+  --s4:      #1f2d45;
+  --b1:      rgba(255,255,255,0.05);
+  --b2:      rgba(255,255,255,0.09);
+  --b3:      rgba(255,255,255,0.14);
+  --lime:    #b8ff5a;
+  --lime-d:  rgba(184,255,90,0.08);
+  --lime-b:  rgba(184,255,90,0.18);
+  --cyan:    #22d3ee;
+  --cyan-d:  rgba(34,211,238,0.08);
+  --amber:   #f59e0b;
+  --amber-d: rgba(245,158,11,0.08);
+  --amber-b: rgba(245,158,11,0.2);
+  --red:     #f43f5e;
+  --red-d:   rgba(244,63,94,0.08);
+  --red-b:   rgba(244,63,94,0.18);
+  --pink:    #e879f9;
+  --pink-d:  rgba(232,121,249,0.08);
+  --text:    #e2eaf8;
+  --muted:   #4d6580;
+  --muted2:  #334155;
+  --r:       8px;
+  --r2:      14px;
+  --r3:      20px;
+  --fh:      'Manrope', sans-serif;
+  --fm:      'DM Mono', monospace;
+  --fd:      'Bebas Neue', sans-serif;
+  --shadow:  0 2px 12px rgba(0,0,0,0.4);
+}
+
+/* ══════════════════════════════════════════════════════
+   LIGHT MODE TOKENS
+══════════════════════════════════════════════════════ */
+body.light {
+  --bg:      #f0f4f8;
+  --s1:      #ffffff;
+  --s2:      #f4f7fb;
+  --s3:      #e8edf5;
+  --s4:      #dde4ef;
+  --b1:      rgba(0,0,0,0.06);
+  --b2:      rgba(0,0,0,0.10);
+  --b3:      rgba(0,0,0,0.15);
+  --lime:    #3a9e00;
+  --lime-d:  rgba(58,158,0,0.08);
+  --lime-b:  rgba(58,158,0,0.20);
+  --cyan:    #0891b2;
+  --cyan-d:  rgba(8,145,178,0.08);
+  --amber:   #d97706;
+  --amber-d: rgba(217,119,6,0.08);
+  --amber-b: rgba(217,119,6,0.20);
+  --red:     #e11d48;
+  --red-d:   rgba(225,29,72,0.08);
+  --red-b:   rgba(225,29,72,0.18);
+  --pink:    #a21caf;
+  --pink-d:  rgba(162,28,175,0.08);
+  --text:    #0f172a;
+  --muted:   #64748b;
+  --muted2:  #94a3b8;
+  --shadow:  0 2px 12px rgba(0,0,0,0.10);
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fh);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 13px;
+  line-height: 1.5;
+  transition: background .25s, color .25s;
+}
+
+/* grain overlay — dark only */
+body:not(.light)::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.4;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--b3); border-radius: 2px; }
+
+/* ══ THEME TOGGLE BUTTON ══ */
+.theme-toggle-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--fm);
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.theme-toggle-btn:hover { border-color: var(--lime-b); color: var(--lime); }
+.theme-toggle-btn .tt-pip {
+  width: 14px; height: 14px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; flex-shrink: 0;
+}
+.theme-toggle-btn .tt-label { font-size: 0.58rem; }
+
+/* Light mode specific surface transitions */
+body.light .sidebar,
+body.light .topbar,
+body.light .panel,
+body.light .kpi,
+body.light .live-row,
+body.light .pay-row,
+body.light .modal {
+  transition: background .25s, border-color .25s, box-shadow .25s;
+}
+body.light .sidebar {
+  box-shadow: 2px 0 16px rgba(0,0,0,0.08);
+}
+body.light .topbar {
+  background: rgba(240,244,248,0.92);
+}
+body.light .kpi { box-shadow: var(--shadow); }
+body.light .panel { box-shadow: var(--shadow); }
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════ */
+.sidebar {
+  position: fixed; top:0; left:0; bottom:0;
+  width: 210px;
+  background: var(--s1);
+  border-right: 1px solid var(--b1);
+  z-index: 200;
+  display: flex; flex-direction: column;
+  transition: background .25s, border-color .25s;
+}
+.sb-brand {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--b1);
+}
+.sb-logo {
+  font-family: var(--fd);
+  font-size: 1.55rem;
+  letter-spacing: 2px;
+  color: var(--lime);
+  line-height: 1;
+}
+.sb-tag {
+  font-family: var(--fm);
+  font-size: 0.52rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.sb-nav {
+  flex: 1;
+  padding: 10px 10px;
+  display: flex; flex-direction: column; gap: 1px;
+  overflow-y: auto;
+}
+.sb-section {
+  font-family: var(--fm);
+  font-size: 0.48rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 12px 10px 5px;
+}
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--muted);
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+.sb-item:hover { background: var(--s2); color: var(--text); }
+.sb-item.active { background: var(--lime-d); border-color: var(--lime-b); color: var(--lime); }
+.sb-icon {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: var(--s3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.sb-item.active .sb-icon { background: var(--lime-d); }
+.sb-badge {
+  margin-left: auto;
+  font-family: var(--fm);
+  font-size: 0.55rem;
+  background: var(--lime-d);
+  border: 1px solid var(--lime-b);
+  color: var(--lime);
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+}
+.sb-badge.red { background: var(--red-d); border-color: var(--red-b); color: var(--red); }
+.sb-badge.amber { background: var(--amber-d); border-color: var(--amber-b); color: var(--amber); }
+
+.sb-footer {
+  padding: 12px;
+  border-top: 1px solid var(--b1);
+}
+.admin-pill {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+}
+.admin-ava {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--lime), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.65rem; color: #000; flex-shrink:0;
+}
+.admin-name { font-size: 0.75rem; font-weight: 700; }
+.admin-role { font-family: var(--fm); font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing:1px; }
+.live-pip {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--lime);
+  margin-left: auto; flex-shrink:0;
+  animation: pip 2s ease-in-out infinite;
+}
+@keyframes pip { 0%,100%{box-shadow:0 0 0 0 rgba(184,255,90,.5)} 50%{box-shadow:0 0 0 5px rgba(184,255,90,0)} }
+body.light .live-pip { animation: pip-light 2s ease-in-out infinite; }
+@keyframes pip-light { 0%,100%{box-shadow:0 0 0 0 rgba(58,158,0,.4)} 50%{box-shadow:0 0 0 5px rgba(58,158,0,0)} }
+
+/* ══════════════════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════════════════ */
+.main { margin-left: 210px; min-height: 100vh; }
+
+/* TOP BAR */
+.topbar {
+  position: sticky; top:0; z-index:100;
+  background: rgba(6,9,16,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--b1);
+  padding: 0 24px;
+  height: 54px;
+  display: flex; align-items: center; justify-content: space-between; gap:14px;
+  transition: background .25s;
+}
+.tb-left { display:flex; align-items:center; gap:12px; }
+.tb-page { font-family: var(--fd); font-size: 1.25rem; letter-spacing: 1px; }
+.tb-right { display:flex; align-items:center; gap:8px; }
+.tb-chip {
+  display: flex; align-items: center; gap:6px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-family: var(--fm);
+  font-size: 0.6rem;
+  letter-spacing:0.5px;
+  border: 1px solid;
+  cursor: default;
+  white-space: nowrap;
+}
+.tc-live { background: var(--lime-d); border-color: var(--lime-b); color: var(--lime); }
+.tc-server { background: var(--cyan-d); border-color: rgba(34,211,238,.2); color: var(--cyan); }
+.tc-time { background: var(--s2); border-color: var(--b2); color: var(--muted); }
+.dot-anim { width:5px;height:5px;border-radius:50%;background:currentColor;animation:pip 2s ease-in-out infinite; }
+.tb-btn {
+  width: 32px; height: 32px; border-radius: var(--r);
+  background: var(--s2); border: 1px solid var(--b2);
+  color: var(--muted); cursor: pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size: 0.85rem; transition: all 0.2s;
+}
+.tb-btn:hover { border-color: var(--lime-b); color: var(--lime); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning { animation: spin 0.7s linear infinite; }
+
+/* ══════════════════════════════════════════════════════
+   PANES
+══════════════════════════════════════════════════════ */
+.pane { display:none; padding: 20px 24px 48px; }
+.pane.active { display: block; }
+
+/* ══════════════════════════════════════════════════════
+   KPI ROW
+══════════════════════════════════════════════════════ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.kpi {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s, background .25s;
+  animation: fadeUp 0.4s ease both;
+}
+.kpi:hover { border-color: var(--b2); transform: translateY(-1px); }
+.kpi::after {
+  content:''; position:absolute; bottom:0;left:0;right:0;height:2px;
+  border-radius: 0 0 var(--r2) var(--r2);
+}
+.kpi.lime::after { background: var(--lime); }
+.kpi.cyan::after { background: var(--cyan); }
+.kpi.amber::after { background: var(--amber); }
+.kpi.pink::after { background: var(--pink); }
+.kpi-lbl { font-family:var(--fm); font-size:0.52rem; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:7px; }
+.kpi-val { font-family:var(--fd); font-size:2.1rem; line-height:1; margin-bottom:5px; }
+.kpi.lime .kpi-val { color:var(--lime); }
+.kpi.cyan .kpi-val { color:var(--cyan); }
+.kpi.amber .kpi-val { color:var(--amber); }
+.kpi.pink .kpi-val { color:var(--pink); }
+.kpi-sub { font-family:var(--fm); font-size:0.58rem; color:var(--muted); display:flex;align-items:center;gap:5px; }
+.kpi-icon { position:absolute; top:12px;right:14px; font-size:1.6rem; opacity:0.06; }
+body.light .kpi-icon { opacity: 0.12; }
+.delta-up { color:var(--lime); }
+.delta-dn { color:var(--red); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══════════════════════════════════════════════════════
+   GRID
+══════════════════════════════════════════════════════ */
+.g2 { display:grid; grid-template-columns:1.5fr 1fr; gap:14px; margin-bottom:14px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+.g-half { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.g-full { margin-bottom:14px; }
+
+/* ══════════════════════════════════════════════════════
+   PANEL
+══════════════════════════════════════════════════════ */
+.panel {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: var(--r2);
+  overflow: hidden;
+  animation: fadeUp 0.4s ease 0.1s both;
+  transition: background .25s, border-color .25s;
+}
+.ph {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--b1);
+  display: flex; align-items:center; justify-content:space-between; gap:10px;
+  flex-wrap: wrap;
+}
+.ph-title {
+  font-family: var(--fd);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 7px;
+}
+.ph-badge {
+  font-family: var(--fm);
+  font-size: 0.52rem;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.pb-lime { background:var(--lime-d);border:1px solid var(--lime-b);color:var(--lime); }
+.pb-cyan { background:var(--cyan-d);border:1px solid rgba(34,211,238,.2);color:var(--cyan); }
+.pb-amber { background:var(--amber-d);border:1px solid var(--amber-b);color:var(--amber); }
+.pb-red { background:var(--red-d);border:1px solid var(--red-b);color:var(--red); }
+.ph-act {
+  font-family:var(--fm); font-size:0.58rem; color:var(--muted);
+  cursor:pointer; background:none; border:none; transition:color .2s; letter-spacing:.5px;
+}
+.ph-act:hover { color:var(--lime); }
+.pb { padding: 14px 16px; }
+
+/* ══ CHART ══ */
+.chart-area {
+  height: 150px;
+  display: flex; align-items: flex-end; gap: 5px; padding: 0 2px;
+}
+.bar-col {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:4px; height:100%; justify-content:flex-end;
+}
+.bar-track {
+  width:100%; background:var(--s3); border-radius:4px 4px 0 0;
+  position:relative; overflow:hidden; min-height:3px;
+}
+.bar-fill {
+  position:absolute; bottom:0; left:0; right:0;
+  border-radius:4px 4px 0 0;
+  background: linear-gradient(to top, var(--lime), rgba(184,255,90,.35));
+  animation: barUp 0.8s cubic-bezier(.4,0,.2,1) both;
+}
+body.light .bar-fill { background: linear-gradient(to top, var(--lime), rgba(58,158,0,.25)); }
+@keyframes barUp { from{height:0!important} to{} }
+.bar-lbl { font-family:var(--fm); font-size:0.46rem; color:var(--muted); }
+.bar-amt { font-family:var(--fm); font-size:0.48rem; color:var(--lime); margin-top:-3px; }
+.chart-legend { display:flex; gap:12px; padding:8px 16px; border-top:1px solid var(--b1); }
+.leg-item { display:flex; align-items:center; gap:5px; font-family:var(--fm); font-size:0.55rem; color:var(--muted); }
+.leg-dot { width:7px;height:7px;border-radius:2px; flex-shrink:0; }
+
+/* ══ LIVE SUBSCRIBERS ══ */
+.live-list { display:flex; flex-direction:column; gap:6px; }
+.live-row {
+  display:flex; align-items:center; gap:9px;
+  padding: 9px 12px;
+  background: var(--s2); border:1px solid var(--b1);
+  border-radius: var(--r); transition: border-color .2s, background .25s;
+}
+.live-row:hover { border-color: var(--b2); }
+.live-ava {
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:0.62rem; flex-shrink:0;
+}
+.live-info { flex:1; min-width:0; }
+.live-ph { font-family:var(--fm); font-size:0.72rem; }
+.live-meta { font-size:0.65rem; color:var(--muted); margin-top:1px; }
+.live-when { font-family:var(--fm); font-size:0.6rem; color:var(--muted); white-space:nowrap; }
+
+/* ══ PAYMENT FEED ══ */
+.pay-feed { display:flex; flex-direction:column; gap:5px; }
+.pay-row {
+  display:flex; align-items:center; gap:10px;
+  padding: 9px 12px;
+  border-radius: var(--r);
+  border: 1px solid var(--b1);
+  background: var(--s2);
+  position:relative; overflow:hidden;
+  transition: border-color .2s, background .25s;
+}
+.pay-row::before { content:''; position:absolute; left:0;top:0;bottom:0;width:2px; }
+.pay-row.ok::before  { background: var(--lime); }
+.pay-row.pend::before { background: var(--amber); }
+.pay-row.fail::before { background: var(--red); }
+.pay-ico {
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem; flex-shrink:0;
+}
+.pay-row.ok   .pay-ico { background:var(--lime-d); color:var(--lime); }
+.pay-row.pend .pay-ico { background:var(--amber-d); color:var(--amber); }
+.pay-row.fail .pay-ico { background:var(--red-d); color:var(--red); }
+.pay-info { flex:1; min-width:0; }
+.pay-ph { font-family:var(--fm); font-size:0.72rem; }
+.pay-desc { font-size:0.63rem; color:var(--muted); margin-top:1px; }
+.pay-amt { font-family:var(--fm); font-size:0.74rem; font-weight:500; }
+.pay-row.ok   .pay-amt { color:var(--lime); }
+.pay-row.pend .pay-amt { color:var(--amber); }
+.pay-row.fail .pay-amt { color:var(--red); }
+.pay-when { font-family:var(--fm); font-size:0.58rem; color:var(--muted); white-space:nowrap; }
+
+/* ══ DONUT ══ */
+.donut-wrap { display:flex;align-items:center;gap:18px;padding:4px 0; }
+.donut-legs { display:flex;flex-direction:column;gap:8px; }
+.donut-leg { display:flex;align-items:center;gap:7px;font-size:0.76rem; }
+.donut-pip { width:9px;height:9px;border-radius:2px;flex-shrink:0; }
+.donut-lbl { color:var(--muted); flex:1; }
+.donut-v { font-family:var(--fm); font-size:0.68rem; }
+
+/* ══ TABLE ══ */
+.tbl-controls {
+  display:flex;align-items:center;gap:8px;padding:10px 16px;
+  border-bottom:1px solid var(--b1);
+}
+.srch-inp {
+  flex:1; background:var(--s2); border:1px solid var(--b2);
+  border-radius:var(--r); padding:6px 11px;
+  color:var(--text); font-family:var(--fm); font-size:0.7rem;
+  outline:none; transition:border-color .2s, background .25s; letter-spacing:.5px;
+}
+.srch-inp:focus { border-color:var(--lime-b); }
+.srch-inp::placeholder { color:var(--muted); }
+.sel-filter {
+  background:var(--s2); border:1px solid var(--b2);
+  border-radius:var(--r); padding:6px 9px;
+  color:var(--muted); font-family:var(--fm); font-size:0.64rem; outline:none; cursor:pointer;
+  transition: background .25s;
+}
+.dt {width:100%;border-collapse:collapse;}
+.dt th {
+  font-family:var(--fm); font-size:0.5rem; color:var(--muted2);
+  text-transform:uppercase; letter-spacing:2px;
+  padding:8px 14px; text-align:left; border-bottom:1px solid var(--b1);
+}
+.dt td {
+  padding:9px 14px; border-bottom:1px solid rgba(0,0,0,0.04);
+  vertical-align:middle;
+}
+body:not(.light) .dt td { border-bottom-color: rgba(255,255,255,.025); }
+.dt tr:last-child td { border-bottom:none; }
+.dt tbody tr:hover td { background:rgba(0,0,0,.025); }
+body:not(.light) .dt tbody tr:hover td { background:rgba(255,255,255,.013); }
+.mono { font-family:var(--fm); font-size:0.72rem; }
+.pill {
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 9px; border-radius:20px;
+  font-family:var(--fm); font-size:0.57rem; letter-spacing:.5px;
+}
+.pill-lime { background:var(--lime-d);border:1px solid var(--lime-b);color:var(--lime); }
+.pill-muted { background:var(--s3);border:1px solid var(--b2);color:var(--muted); }
+.pill-amber { background:var(--amber-d);border:1px solid var(--amber-b);color:var(--amber); }
+.tbl-footer {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px; border-top:1px solid var(--b1);
+}
+.tbl-info { font-family:var(--fm); font-size:0.57rem; color:var(--muted); letter-spacing:.5px; }
+.pg-wrap { display:flex; gap:3px; }
+.pg-btn {
+  width:26px;height:26px;border-radius:6px;
+  background:none; border:1px solid var(--b2);
+  color:var(--muted); cursor:pointer;font-size:0.68rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s; font-family:var(--fm);
+}
+.pg-btn:hover { border-color:var(--lime-b);color:var(--lime); }
+.pg-btn.on { background:var(--lime-d);border-color:var(--lime-b);color:var(--lime); }
+.row-act {
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;font-family:var(--fm);font-size:0.58rem;
+  padding:3px 7px;border-radius:5px;border:1px solid var(--b2);
+  transition:all .15s;
+}
+.row-act:hover { border-color:var(--red-b);color:var(--red); }
+.row-act.grant:hover { border-color:var(--lime-b);color:var(--lime); }
+
+/* ══ SPARKLINE ══ */
+.spark-row { display:flex;align-items:flex-end;gap:2px;height:44px;padding:0 1px; }
+.spark-b {
+  flex:1;border-radius:2px 2px 0 0;background:var(--lime-d);
+  min-height:3px;transition:background .2s;cursor:pointer;
+}
+.spark-b:hover { background:var(--lime); }
+.spark-b.now { background:var(--lime); }
+
+/* ══ ESPN / SYNC ══ */
+.sync-row {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px;border-bottom:1px solid var(--b1);
+  font-size:0.78rem;
+}
+.sync-row:last-child { border-bottom:none; }
+.sync-lbl { color:var(--muted); font-family:var(--fm); font-size:0.6rem; text-transform:uppercase;letter-spacing:1px; }
+.sync-val { font-family:var(--fm); font-size:0.72rem; }
+
+/* ══ TIPS TABLE ══ */
+.grade-form { display:flex;align-items:center;gap:5px;flex-wrap:wrap; }
+.grade-inp {
+  background:var(--s2);border:1px solid var(--b2);border-radius:5px;
+  padding:4px 7px;color:var(--text);font-family:var(--fm);font-size:0.65rem;
+  outline:none;width:70px; transition: background .25s;
+}
+.grade-inp:focus { border-color:var(--lime-b); }
+.grade-btn {
+  padding:3px 9px;border-radius:5px;border:none;cursor:pointer;
+  font-family:var(--fm);font-size:0.6rem;letter-spacing:.5px;
+  font-weight:500;transition:all .15s;
+}
+.grade-btn.win { background:var(--lime-d);border:1px solid var(--lime-b);color:var(--lime); }
+.grade-btn.win:hover { background:var(--lime);color:#000; }
+.grade-btn.loss { background:var(--red-d);border:1px solid var(--red-b);color:var(--red); }
+.grade-btn.loss:hover { background:var(--red);color:#fff; }
+.grade-btn.del { background:var(--s3);border:1px solid var(--b2);color:var(--muted); }
+.grade-btn.del:hover { border-color:var(--red-b);color:var(--red); }
+
+/* ══ STATES ══ */
+.state-box { text-align:center;padding:32px 16px;color:var(--muted); }
+.state-spin {
+  width:28px;height:28px;border:2px solid var(--b2);
+  border-top-color:var(--lime);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 10px;
+}
+.state-txt { font-family:var(--fm);font-size:0.65rem;letter-spacing:1px; }
+.state-icon { font-size:1.8rem;opacity:.25;display:block;margin-bottom:8px; }
+
+/* ══ MINI METRICS ══ */
+.mini-metrics { display:flex;gap:5px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--b1); }
+.mini-m {
+  flex:1;min-width:70px;background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--r);padding:8px 10px;text-align:center;
+  transition: background .25s;
+}
+.mini-v { font-family:var(--fd);font-size:1.25rem;line-height:1;margin-bottom:2px; }
+.mini-l { font-family:var(--fm);font-size:0.46rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px; }
+
+/* ══ TOAST ══ */
+#toast {
+  position:fixed;bottom:18px;right:20px;
+  background:var(--s2);border:1px solid var(--b3);
+  color:var(--text);font-family:var(--fm);font-size:0.65rem;
+  padding:8px 14px;border-radius:var(--r);z-index:9000;
+  opacity:0;transform:translateY(8px);
+  transition:all .22s;pointer-events:none;letter-spacing:.5px;
+  max-width:280px; box-shadow: var(--shadow);
+}
+#toast.show { opacity:1;transform:translateY(0); }
+#toast.ok { border-color:var(--lime-b);color:var(--lime); }
+#toast.err { border-color:var(--red-b);color:var(--red); }
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:900px) {
+  .kpi-row { grid-template-columns:repeat(2,1fr); }
+  .g2,.g3 { grid-template-columns:1fr; }
+  .g-half { grid-template-columns:1fr; }
+}
+@media(max-width:680px) {
+  .sidebar { width:52px; }
+  .sb-brand,.sb-section,.sb-item span,.sb-badge,.admin-info { display:none; }
+  .sb-item { justify-content:center;padding:9px; }
+  .admin-pill { justify-content:center;padding:7px; }
+  .main { margin-left:52px; }
+  .kpi-row { grid-template-columns:1fr 1fr; }
+  .pane { padding:12px 14px 48px; }
+  .topbar { padding:0 14px; }
+  .theme-toggle-btn .tt-label { display:none; }
+}
+@media(max-width:400px) {
+  .kpi-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">Bett Officials</div>
+    <div class="sb-tag">Admin Console</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <div class="sb-item active" data-pane="overview" onclick="nav(this)">
+      <div class="sb-icon">⚡</div><span>Dashboard</span>
+    </div>
+    <div class="sb-item" data-pane="revenue" onclick="nav(this)">
+      <div class="sb-icon">💰</div><span>Revenue</span>
+    </div>
+    <div class="sb-item" data-pane="users" onclick="nav(this)">
+      <div class="sb-icon">👥</div><span>Subscribers</span>
+      <span class="sb-badge" id="badge-subs">0</span>
+    </div>
+    <div class="sb-section">Manage</div>
+    <div class="sb-item" data-pane="tips" onclick="nav(this)">
+      <div class="sb-icon">📋</div><span>Tips &amp; Grading</span>
+      <span class="sb-badge amber" id="badge-tips">0</span>
+    </div>
+    <div class="sb-item" data-pane="espn" onclick="nav(this)">
+      <div class="sb-icon">📡</div><span>ESPN Sync</span>
+    </div>
+    <div class="sb-section">System</div>
+    <div class="sb-item" data-pane="payments" onclick="nav(this)">
+      <div class="sb-icon">💳</div><span>Payments</span>
+      <span class="sb-badge" id="badge-pending">0</span>
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="admin-pill">
+      <div class="admin-ava">A</div>
+      <div class="admin-info"><div class="admin-name">Admin</div><div class="admin-role">Super User</div></div>
+      <div class="live-pip"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-page" id="pageTitle">DASHBOARD</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-chip tc-live"><div class="dot-anim"></div>LIVE</div>
+      <div class="tb-chip tc-server" id="serverChip">⏳ Connecting…</div>
+      <div class="tb-chip tc-time" id="clock">—</div>
+      <!-- THEME TOGGLE -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light / dark mode">
+        <span class="tt-pip" id="themeIcon">🌙</span>
+        <span class="tt-label" id="themeLabel">Light Mode</span>
+      </button>
+      <button class="tb-btn" id="refreshBtn" onclick="refreshAll()" title="Refresh all">↻</button>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: OVERVIEW ══════════ -->
+  <div class="pane active" id="pane-overview">
+    <div class="kpi-row">
+      <div class="kpi lime" style="animation-delay:.04s">
+        <div class="kpi-lbl">Today's Revenue</div>
+        <div class="kpi-val" id="k-revenue">KES 0</div>
+        <div class="kpi-sub"><span class="delta-up" id="k-rev-delta">Calculating…</span></div>
+        <div class="kpi-icon">💰</div>
+      </div>
+      <div class="kpi cyan" style="animation-delay:.08s">
+        <div class="kpi-lbl">Active Subscribers</div>
+        <div class="kpi-val" id="k-active">0</div>
+        <div class="kpi-sub"><span class="delta-up" id="k-act-delta">Pro users today</span></div>
+        <div class="kpi-icon">👥</div>
+      </div>
+      <div class="kpi amber" style="animation-delay:.12s">
+        <div class="kpi-lbl">Total Payments</div>
+        <div class="kpi-val" id="k-total-pay">0</div>
+        <div class="kpi-sub"><span id="k-pay-delta" class="delta-up">All time</span></div>
+        <div class="kpi-icon">💳</div>
+      </div>
+      <div class="kpi pink" style="animation-delay:.16s">
+        <div class="kpi-lbl">Success Rate</div>
+        <div class="kpi-val" id="k-rate">—%</div>
+        <div class="kpi-sub"><span id="k-rate-delta">Calculating…</span></div>
+        <div class="kpi-icon">📈</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">📊 Revenue — Last 7 Days <span class="ph-badge pb-lime">KES</span></div>
+          <button class="ph-act" onclick="toast('Exporting…','ok')">Export CSV</button>
+        </div>
+        <div class="pb"><div class="chart-area" id="revChart"><div class="state-box"><div class="state-spin"></div><div class="state-txt">Loading…</div></div></div></div>
+        <div class="chart-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--lime)"></div>Daily Revenue (KES)</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--cyan)"></div>Subscribers</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">🟢 Active Subscribers <span class="ph-badge pb-lime" id="liveSubCount">0</span></div>
+          <button class="ph-act" onclick="loadSubs()">↻ Refresh</button>
+        </div>
+        <div class="pb" style="max-height:222px;overflow-y:auto">
+          <div class="live-list" id="liveSubList"><div class="state-box"><div class="state-spin"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">💳 Recent Payments <span class="ph-badge pb-cyan">Live</span></div>
+          <button class="ph-act" onclick="loadPayments()">↻</button>
+        </div>
+        <div class="pb" style="max-height:270px;overflow-y:auto">
+          <div class="pay-feed" id="payFeed"><div class="state-box"><div class="state-spin"></div></div></div>
+        </div>
+        <div class="tbl-footer">
+          <span class="tbl-info" id="payFeedInfo">—</span>
+          <button class="ph-act" onclick="nav(document.querySelector('[data-pane=payments]'))">View all →</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph">
+          <div class="ph-title">📉 Payment Breakdown</div>
+          <span class="ph-badge pb-amber">Today</span>
+        </div>
+        <div class="pb">
+          <div class="donut-wrap">
+            <svg width="108" height="108" viewBox="0 0 108 108">
+              <circle cx="54" cy="54" r="40" fill="none" stroke="var(--s3)" stroke-width="13"/>
+              <circle id="d-ok"   cx="54" cy="54" r="40" fill="none" stroke="var(--lime)"  stroke-width="13" stroke-dasharray="0 251" stroke-linecap="round" transform="rotate(-90 54 54)" style="transition:stroke-dasharray 1s ease"/>
+              <circle id="d-pend" cx="54" cy="54" r="40" fill="none" stroke="var(--amber)" stroke-width="13" stroke-dasharray="0 251" stroke-linecap="round" transform="rotate(-90 54 54)" style="transition:stroke-dasharray 1s ease;opacity:.65"/>
+              <circle id="d-fail" cx="54" cy="54" r="40" fill="none" stroke="var(--red)"   stroke-width="13" stroke-dasharray="0 251" stroke-linecap="round" transform="rotate(-90 54 54)" style="transition:stroke-dasharray 1s ease;opacity:.5"/>
+              <text x="54" y="50" text-anchor="middle" fill="var(--text)" font-family="Bebas Neue" font-size="18" id="d-center">—</text>
+              <text x="54" y="63" text-anchor="middle" fill="var(--muted)" font-family="DM Mono,monospace" font-size="6.5">SUCCESS</text>
+            </svg>
+            <div class="donut-legs">
+              <div class="donut-leg"><div class="donut-pip" style="background:var(--lime)"></div><span class="donut-lbl">Completed</span><span class="donut-v" id="d-v-ok">—</span></div>
+              <div class="donut-leg"><div class="donut-pip" style="background:var(--amber)"></div><span class="donut-lbl">Pending</span><span class="donut-v" id="d-v-pend">—</span></div>
+              <div class="donut-leg"><div class="donut-pip" style="background:var(--red)"></div><span class="donut-lbl">Failed</span><span class="donut-v" id="d-v-fail">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-metrics">
+          <div class="mini-m"><div class="mini-v" style="color:var(--lime)" id="mm-avg">—</div><div class="mini-l">Avg / Sub</div></div>
+          <div class="mini-m"><div class="mini-v" style="color:var(--cyan)" id="mm-peak">—</div><div class="mini-l">Peak Hr</div></div>
+          <div class="mini-m"><div class="mini-v" style="color:var(--amber)" id="mm-pend-kes">—</div><div class="mini-l">Pend KES</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g-half">
+      <div class="panel">
+        <div class="ph"><div class="ph-title">⏱ Hourly Activity</div><span class="ph-badge pb-lime">Today</span></div>
+        <div class="pb">
+          <div class="spark-row" id="sparkline"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:5px">
+            <span style="font-family:var(--fm);font-size:.47rem;color:var(--muted)">00:00</span>
+            <span style="font-family:var(--fm);font-size:.47rem;color:var(--muted)">12:00</span>
+            <span style="font-family:var(--fm);font-size:.47rem;color:var(--muted)">23:59</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-title">📡 ESPN Sync Status</div><span class="ph-badge pb-cyan" id="syncStatusBadge">—</span></div>
+        <div id="syncStatusBody"><div class="state-box"><div class="state-spin"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: REVENUE ══════════ -->
+  <div class="pane" id="pane-revenue">
+    <div class="kpi-row">
+      <div class="kpi lime"><div class="kpi-lbl">Today's Revenue</div><div class="kpi-val" id="r-today">KES 0</div><div class="kpi-sub">From proSubscribers</div><div class="kpi-icon">💰</div></div>
+      <div class="kpi cyan"><div class="kpi-lbl">This Week</div><div class="kpi-val" id="r-week">KES 0</div><div class="kpi-sub">7-day total</div><div class="kpi-icon">📅</div></div>
+      <div class="kpi amber"><div class="kpi-lbl">All Time</div><div class="kpi-val" id="r-alltime">KES 0</div><div class="kpi-sub">From proSubscribers</div><div class="kpi-icon">🏆</div></div>
+      <div class="kpi pink"><div class="kpi-lbl">Price / Unit</div><div class="kpi-val">KES 49</div><div class="kpi-sub">Fixed daily price</div><div class="kpi-icon">🏷</div></div>
+    </div>
+    <div class="panel g-full">
+      <div class="ph"><div class="ph-title">📊 Daily Revenue — Last 14 Days <span class="ph-badge pb-lime">KES</span></div></div>
+      <div class="pb"><div class="chart-area" style="height:180px" id="revChart14"></div></div>
+    </div>
+    <div class="panel g-full">
+      <div class="ph"><div class="ph-title">📋 Revenue Detail — All Subscribers</div><button class="ph-act" onclick="exportCSV()">⬇ Export CSV</button></div>
+      <div style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr><th>#</th><th>Phone</th><th>Unlocked At</th><th>Amount</th><th>M-Pesa Code</th><th>Tx Ref</th></tr></thead>
+          <tbody id="revTableBody"><tr><td colspan="6"><div class="state-box"><div class="state-spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: SUBSCRIBERS ══════════ -->
+  <div class="pane" id="pane-users">
+    <div class="kpi-row">
+      <div class="kpi lime"><div class="kpi-lbl">Total Subscribers</div><div class="kpi-val" id="u-total">0</div><div class="kpi-sub">All proSubscribers</div><div class="kpi-icon">👥</div></div>
+      <div class="kpi cyan"><div class="kpi-lbl">Today's Subs</div><div class="kpi-val" id="u-today">0</div><div class="kpi-sub">Unlocked today</div><div class="kpi-icon">📅</div></div>
+      <div class="kpi amber"><div class="kpi-lbl">Avg Subs/Day</div><div class="kpi-val" id="u-avg">—</div><div class="kpi-sub">7-day average</div><div class="kpi-icon">📈</div></div>
+      <div class="kpi pink"><div class="kpi-lbl">Repeat Access</div><div class="kpi-val" id="u-repeat">—</div><div class="kpi-sub">Same phone multi-day</div><div class="kpi-icon">🔄</div></div>
+    </div>
+    <div class="panel g-full">
+      <div class="ph">
+        <div class="ph-title">👤 Subscriber Registry <span class="ph-badge pb-lime" id="subCount">0</span></div>
+        <button class="ph-act" onclick="exportCSV()">⬇ Export</button>
+      </div>
+      <div class="tbl-controls">
+        <input class="srch-inp" type="text" placeholder="Search phone or M-Pesa ref…" id="userSearch" oninput="filterUsers()">
+        <select class="sel-filter" id="userDateFilter" onchange="filterUsers()">
+          <option value="all">All dates</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr><th>#</th><th>Phone</th><th>Unlocked At</th><th>Amount</th><th>M-Pesa Code</th><th>Tx Ref</th><th>Actions</th></tr></thead>
+          <tbody id="usersBody"><tr><td colspan="7"><div class="state-box"><div class="state-spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="tbl-footer">
+        <span class="tbl-info" id="usersInfo">—</span>
+        <div class="pg-wrap" id="userPages"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: TIPS GRADING ══════════ -->
+  <div class="pane" id="pane-tips">
+    <div class="kpi-row">
+      <div class="kpi lime"><div class="kpi-lbl">Today's Tips</div><div class="kpi-val" id="t-total">0</div><div class="kpi-sub">publicTips / today</div><div class="kpi-icon">⚽</div></div>
+      <div class="kpi cyan"><div class="kpi-lbl">Graded</div><div class="kpi-val" id="t-graded">0</div><div class="kpi-sub">Win + Loss</div><div class="kpi-icon">✅</div></div>
+      <div class="kpi amber"><div class="kpi-lbl">Pending</div><div class="kpi-val" id="t-pending">0</div><div class="kpi-sub">Awaiting result</div><div class="kpi-icon">⏳</div></div>
+      <div class="kpi pink"><div class="kpi-lbl">Win Rate</div><div class="kpi-val" id="t-wr">—</div><div class="kpi-sub">Today's record</div><div class="kpi-icon">🏆</div></div>
+    </div>
+    <div class="panel g-full">
+      <div class="ph">
+        <div class="ph-title">📋 Tips Manager <span class="ph-badge pb-amber" id="tipsDateBadge">Today</span></div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="date" id="tipsDatePicker" class="srch-inp" style="width:130px" onchange="loadTips(this.value)">
+          <button class="ph-act" onclick="loadTips()">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr><th>Match</th><th>League</th><th>KO</th><th>Tip</th><th>Result</th><th>Score</th><th>Grade / Delete</th></tr></thead>
+          <tbody id="tipsBody"><tr><td colspan="7"><div class="state-box"><div class="state-spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: ESPN SYNC ══════════ -->
+  <div class="pane" id="pane-espn">
+    <div class="kpi-row">
+      <div class="kpi lime"><div class="kpi-lbl">Leagues Monitored</div><div class="kpi-val" id="e-leagues">—</div><div class="kpi-sub">ALL_SLUGS count</div><div class="kpi-icon">⚽</div></div>
+      <div class="kpi cyan"><div class="kpi-lbl">Tips Updated</div><div class="kpi-val" id="e-tips">—</div><div class="kpi-sub">Last sync run</div><div class="kpi-icon">🔄</div></div>
+      <div class="kpi amber"><div class="kpi-lbl">Errors</div><div class="kpi-val" id="e-err">—</div><div class="kpi-sub">Cumulative</div><div class="kpi-icon">⚠️</div></div>
+      <div class="kpi pink"><div class="kpi-lbl">Sync Running</div><div class="kpi-val" id="e-running">—</div><div class="kpi-sub">Currently active</div><div class="kpi-icon">📡</div></div>
+    </div>
+    <div class="g-half">
+      <div class="panel">
+        <div class="ph"><div class="ph-title">📡 Sync Details</div><span class="ph-badge pb-cyan">Live</span></div>
+        <div id="espnDetails"><div class="state-box"><div class="state-spin"></div></div></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--b1)">
+          <button class="grade-btn win" onclick="manualSync()" id="syncBtn" style="width:100%;padding:8px">▶ Run Manual Sync Now</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-title">🔍 Search Matches by ESPN ID</div></div>
+        <div class="pb" style="display:flex;flex-direction:column;gap:8px">
+          <input class="srch-inp" type="text" placeholder="ESPN ID or team name…" id="espnSearch">
+          <select class="sel-filter" style="width:100%" id="espnSlug">
+            <option value="eng.1">Premier League</option>
+            <option value="esp.1">La Liga</option>
+            <option value="ita.1">Serie A</option>
+            <option value="ger.1">Bundesliga</option>
+            <option value="fra.1">Ligue 1</option>
+            <option value="uefa.champions">Champions League</option>
+            <option value="ken.1">Kenyan Premier League</option>
+            <option value="rsa.1">SA Premier Division</option>
+          </select>
+          <button class="grade-btn win" onclick="searchESPN()" style="padding:7px">Search ESPN</button>
+          <div id="espnResults" style="max-height:220px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PANE: PAYMENTS ══════════ -->
+  <div class="pane" id="pane-payments">
+    <div class="kpi-row">
+      <div class="kpi lime"><div class="kpi-lbl">Completed</div><div class="kpi-val" id="p-ok">0</div><div class="kpi-sub">proPayments</div><div class="kpi-icon">✅</div></div>
+      <div class="kpi amber"><div class="kpi-lbl">Pending</div><div class="kpi-val" id="p-pend">0</div><div class="kpi-sub">STK sent, no PIN yet</div><div class="kpi-icon">⏳</div></div>
+      <div class="kpi pink"><div class="kpi-lbl">Failed</div><div class="kpi-val" id="p-fail">0</div><div class="kpi-sub">Cancelled / timed out</div><div class="kpi-icon">❌</div></div>
+      <div class="kpi cyan"><div class="kpi-lbl">Total Volume</div><div class="kpi-val" id="p-vol">KES 0</div><div class="kpi-sub">Completed × KES 49</div><div class="kpi-icon">💵</div></div>
+    </div>
+    <div class="panel g-full">
+      <div class="ph">
+        <div class="ph-title">💳 All Payments — Firebase proPayments <span class="ph-badge pb-cyan">Real-time</span></div>
+        <button class="ph-act" onclick="loadPayments(true)">↻ Refresh</button>
+      </div>
+      <div class="tbl-controls">
+        <input class="srch-inp" type="text" placeholder="Search phone or ref…" id="paySearch" oninput="filterPayments()">
+        <select class="sel-filter" id="payStatusFilter" onchange="filterPayments()">
+          <option value="all">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="dt">
+          <thead><tr><th>#</th><th>Phone</th><th>Tx Ref</th><th>Amount</th><th>M-Pesa Code</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="paymentsBody"><tr><td colspan="8"><div class="state-box"><div class="state-spin"></div></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="tbl-footer">
+        <span class="tbl-info" id="paymentsInfo">—</span>
+        <div class="pg-wrap" id="payPages"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+const SERVER  = 'https://voter-server-fmfr.onrender.com';
+const PRICE   = 49;
+const PAGE_SZ = 15;
+
+firebase.initializeApp({
+  apiKey:        "AIzaSyAKtfTZ5j3KYvHynIV5vfNKpclbEmrU794",
+  authDomain:    "community-caa4a.firebaseapp.com",
+  databaseURL:   "https://community-caa4a-default-rtdb.firebaseio.com",
+  projectId:     "community-caa4a",
+  storageBucket: "community-caa4a.appspot.com",
+  messagingSenderId: "51051822203",
+  appId:         "1:51051822203:web:0cd43a4e1f23594f0a36de"
+});
+const rtdb = firebase.database();
+
+/* ════════════════════════════════
+   THEME
+════════════════════════════════ */
+function applyTheme(light) {
+  document.body.classList.toggle('light', light);
+  document.getElementById('themeIcon').textContent  = light ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = light ? 'Dark Mode' : 'Light Mode';
+  // Topbar bg fix for light mode
+  const tb = document.querySelector('.topbar');
+  if (tb) tb.style.background = light
+    ? 'rgba(240,244,248,0.92)'
+    : 'rgba(6,9,16,0.85)';
+  localStorage.setItem('bo_admin_theme', light ? 'light' : 'dark');
+}
+function toggleTheme() { applyTheme(!document.body.classList.contains('light')); }
+
+// Init theme from localStorage
+(function() {
+  const saved = localStorage.getItem('bo_admin_theme');
+  if (saved === 'light') applyTheme(true);
+})();
+
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+let allSubs      = [];
+let allPayments  = [];
+let allTips      = [];
+let filtSubs     = [];
+let filtPays     = [];
+let subPage      = 1;
+let payPage      = 1;
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const esc = s => (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function todayKE() {
+  const n = new Date();
+  return new Date(n.getTime() + n.getTimezoneOffset()*60000 + 10800000).toISOString().split('T')[0];
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+function timeSince(iso) {
+  if (!iso) return '—';
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60)   return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+function maskPhone(p) {
+  if (!p) return '—';
+  const d = String(p).replace(/\D/g,'');
+  return d.length < 9 ? p : d.slice(0,4) + '···' + d.slice(-3);
+}
+
+/* ════════════════════════════════
+   TOAST
+════════════════════════════════ */
+let _tt;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = type ? `show ${type}` : 'show';
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.className = '', 3000);
+}
+
+/* ════════════════════════════════
+   CLOCK + SERVER HEALTH
+════════════════════════════════ */
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}, 1000);
+
+async function pingServer() {
+  try {
+    const r = await fetch(`${SERVER}/`, { signal: AbortSignal.timeout(6000) });
+    const d = await r.json();
+    const chip = document.getElementById('serverChip');
+    chip.textContent = `✓ ${d.firebase === 'connected' ? 'Firebase OK' : 'Firebase?'}`;
+    chip.style.color = 'var(--lime)';
+    chip.style.borderColor = 'var(--lime-b)';
+  } catch(e) {
+    const chip = document.getElementById('serverChip');
+    chip.textContent = '✗ Server offline';
+    chip.style.color = 'var(--red)';
+  }
+}
+pingServer();
+setInterval(pingServer, 30000);
+
+/* ════════════════════════════════
+   NAV
+════════════════════════════════ */
+const PAGE_TITLES = {
+  overview:'DASHBOARD', revenue:'REVENUE', users:'SUBSCRIBERS',
+  tips:'TIPS & GRADING', espn:'ESPN SYNC', payments:'PAYMENTS'
+};
+function nav(el) {
+  document.querySelectorAll('.sb-item').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  const id = el.dataset.pane;
+  document.getElementById(`pane-${id}`).classList.add('active');
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[id] || id.toUpperCase();
+  if (id === 'tips')     loadTips();
+  if (id === 'espn')     loadESPNStatus();
+  if (id === 'revenue')  renderRevenuePage();
+  if (id === 'users')    renderUsersPage();
+  if (id === 'payments') renderPaymentsPage();
+}
+
+/* ════════════════════════════════
+   FIREBASE — LOAD ALL DATA
+════════════════════════════════ */
+async function loadFirebaseData() {
+  const [subsSnap, paysSnap] = await Promise.all([
+    rtdb.ref('proSubscribers').once('value'),
+    rtdb.ref('proPayments').once('value'),
+  ]);
+  const subsVal = subsSnap.val() || {};
+  allSubs = Object.values(subsVal).filter(Boolean).sort((a,b) =>
+    new Date(b.unlockedAt||0) - new Date(a.unlockedAt||0)
+  );
+  const paysVal = paysSnap.val() || {};
+  allPayments = Object.entries(paysVal).map(([ref,v]) => ({...v, _ref:ref}))
+    .filter(Boolean).sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+  filtSubs = [...allSubs];
+  filtPays = [...allPayments];
+}
+
+rtdb.ref('proSubscribers').on('value', snap => {
+  const val = snap.val() || {};
+  allSubs = Object.values(val).filter(Boolean).sort((a,b) =>
+    new Date(b.unlockedAt||0) - new Date(a.unlockedAt||0)
+  );
+  filtSubs = [...allSubs];
+  updateKPIs();
+  renderLiveSubs();
+  document.getElementById('badge-subs').textContent = allSubs.length;
+});
+
+rtdb.ref('proPayments').on('value', snap => {
+  const val = snap.val() || {};
+  allPayments = Object.entries(val).map(([ref,v]) => ({...v, _ref:ref}))
+    .filter(Boolean).sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+  filtPays = [...allPayments];
+  const pending = allPayments.filter(p => p.status === 'pending').length;
+  document.getElementById('badge-pending').textContent = pending;
+  updateKPIs();
+  renderPayFeed();
+  renderDonut();
+  renderSparkline();
+});
+
+/* ════════════════════════════════
+   KPIs
+════════════════════════════════ */
+function updateKPIs() {
+  const today     = todayKE();
+  const todaySubs = allSubs.filter(s => (s.unlockedAt||'').startsWith(today));
+  const revenue   = todaySubs.length * PRICE;
+  const active    = allSubs.length;
+  const totalPay  = allPayments.length;
+  const okPay     = allPayments.filter(p => p.status === 'completed' || p.status === 'confirmed');
+  const rate      = totalPay > 0 ? Math.round(okPay.length / totalPay * 100) : 0;
+  document.getElementById('k-revenue').textContent   = `KES ${revenue.toLocaleString()}`;
+  document.getElementById('k-active').textContent    = active;
+  document.getElementById('k-total-pay').textContent = totalPay;
+  document.getElementById('k-rate').textContent      = `${rate}%`;
+  document.getElementById('k-rev-delta').textContent = `↑ ${todaySubs.length} today · KES ${revenue}`;
+  document.getElementById('k-act-delta').textContent = `${active} total pro users`;
+  const rateEl = document.getElementById('k-rate-delta');
+  rateEl.textContent = rate >= 60 ? '✓ Healthy' : '⚠ Below target';
+  rateEl.className   = rate >= 60 ? 'delta-up' : 'delta-dn';
+  document.getElementById('liveSubCount').textContent = active;
+  document.getElementById('badge-subs').textContent   = active;
+}
+
+/* ════════════════════════════════
+   LIVE SUBS PANEL
+════════════════════════════════ */
+const AVACOLS = [
+  {bg:'rgba(184,255,90,.1)',c:'var(--lime)'},
+  {bg:'rgba(34,211,238,.1)',c:'var(--cyan)'},
+  {bg:'rgba(232,121,249,.1)',c:'var(--pink)'},
+  {bg:'rgba(245,158,11,.1)',c:'var(--amber)'},
+];
+function renderLiveSubs() {
+  const el   = document.getElementById('liveSubList');
+  const list = allSubs.slice(0, 12);
+  if (!list.length) { el.innerHTML = `<div class="state-box"><span class="state-icon">🔒</span><div class="state-txt">No subscribers yet</div></div>`; return; }
+  el.innerHTML = list.map((s,i) => {
+    const c   = AVACOLS[i%4];
+    const init= (s.phone||'?').replace(/\D/g,'').slice(-4,-3)||'?';
+    const t   = s.unlockedAt ? fmtDate(s.unlockedAt) : '—';
+    return `<div class="live-row">
+      <div class="live-ava" style="background:${c.bg};color:${c.c}">${init}</div>
+      <div class="live-info">
+        <div class="live-ph">${maskPhone(s.phone)}</div>
+        <div class="live-meta">${t} · KES ${s.amount||PRICE}</div>
+      </div>
+      <div class="live-when">${timeSince(s.unlockedAt)}</div>
+      <div class="live-pip"></div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   PAYMENT FEED
+════════════════════════════════ */
+function renderPayFeed() {
+  const el   = document.getElementById('payFeed');
+  const pays = allPayments.slice(0, 14);
+  if (!pays.length) { el.innerHTML = `<div class="state-box"><span class="state-icon">💳</span><div class="state-txt">No payments yet</div></div>`; return; }
+  const icons  = { completed:'✓', confirmed:'✓', pending:'⏳', failed:'✗' };
+  const labels = { completed:'M-Pesa confirmed', confirmed:'M-Pesa confirmed', pending:'Awaiting PIN', failed:'Cancelled/timed out' };
+  el.innerHTML = pays.map(p => {
+    const st  = p.status || 'pending';
+    const cls = (st === 'completed' || st === 'confirmed') ? 'ok' : st === 'pending' ? 'pend' : 'fail';
+    const t   = p.createdAt ? fmtDate(p.createdAt) : '—';
+    return `<div class="pay-row ${cls}">
+      <div class="pay-ico">${icons[st]||'•'}</div>
+      <div class="pay-info">
+        <div class="pay-ph">${maskPhone(p.phone)} <span style="color:var(--muted);font-size:.6rem">${esc(p._ref||'')}</span></div>
+        <div class="pay-desc">${labels[st]||st}${p.mpesaCode ? ` · ${esc(p.mpesaCode)}` : ''}</div>
+      </div>
+      <div>
+        <div class="pay-amt">KES ${p.amount||PRICE}</div>
+        <div class="pay-when">${t}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('payFeedInfo').textContent = `Showing ${pays.length} of ${allPayments.length}`;
+}
+
+/* ════════════════════════════════
+   DONUT
+════════════════════════════════ */
+function renderDonut() {
+  const ok    = allPayments.filter(p => p.status === 'completed' || p.status === 'confirmed').length;
+  const pend  = allPayments.filter(p => p.status === 'pending').length;
+  const fail  = allPayments.filter(p => p.status === 'failed').length;
+  const total = allPayments.length || 1;
+  const circ  = 2 * Math.PI * 40;
+  function setArc(id, pct, offset) {
+    const el = document.getElementById(id); if (!el) return;
+    el.style.strokeDasharray  = `${pct*circ} ${circ - pct*circ}`;
+    el.style.strokeDashoffset = -offset;
+  }
+  setTimeout(() => {
+    setArc('d-ok',   ok/total,   0);
+    setArc('d-pend', pend/total, ok/total*circ);
+    setArc('d-fail', fail/total, (ok+pend)/total*circ);
+  }, 150);
+  document.getElementById('d-center').textContent  = ok;
+  document.getElementById('d-v-ok').textContent    = ok;
+  document.getElementById('d-v-pend').textContent  = pend;
+  document.getElementById('d-v-fail').textContent  = fail;
+  document.getElementById('mm-avg').textContent      = `KES ${PRICE}`;
+  document.getElementById('mm-pend-kes').textContent = pend * PRICE;
+  const hours = Array(24).fill(0);
+  allPayments.filter(p => p.status === 'completed' || p.status === 'confirmed')
+    .forEach(p => { if (p.completedAt) hours[new Date(p.completedAt).getHours()]++; });
+  const peakH = hours.indexOf(Math.max(...hours));
+  document.getElementById('mm-peak').textContent = `${peakH}:00`;
+}
+
+/* ════════════════════════════════
+   SPARKLINE
+════════════════════════════════ */
+function renderSparkline() {
+  const hours = Array(24).fill(0);
+  const nowH  = new Date().getHours();
+  allPayments.filter(p => (p.createdAt||'').startsWith(todayKE()))
+    .forEach(p => hours[new Date(p.createdAt).getHours()]++);
+  const maxH = Math.max(...hours, 1);
+  document.getElementById('sparkline').innerHTML = hours.map((v,i) =>
+    `<div class="spark-b ${i===nowH?'now':''}" style="height:${Math.max(Math.round(v/maxH*100),5)}%"
+      title="${i}:00 · ${v} payment${v!==1?'s':''}"></div>`
+  ).join('');
+}
+
+/* ════════════════════════════════
+   REVENUE CHART
+════════════════════════════════ */
+function buildDayBuckets(n) {
+  const days = [];
+  for (let i = n-1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push({ key: d.toISOString().split('T')[0], label: i===0?'Today':d.toLocaleDateString('en-KE',{weekday:'short'}).slice(0,3), subs:0, rev:0 });
+  }
+  return days;
+}
+function fillDayBuckets(days) {
+  allSubs.forEach(s => {
+    const dk = (s.unlockedAt||'').split('T')[0];
+    const b  = days.find(d => d.key === dk);
+    if (b) { b.subs++; b.rev += (s.amount||PRICE); }
+  });
+}
+function renderRevChart(containerId, days) {
+  const el  = document.getElementById(containerId); if (!el) return;
+  const max = Math.max(...days.map(d=>d.rev), 1);
+  el.innerHTML = days.map(d => {
+    const h = Math.max(Math.round(d.rev/max*100), d.rev>0?4:0);
+    return `<div class="bar-col">
+      <div class="bar-track" style="flex:1">
+        ${d.rev > 0 ? `<div class="bar-fill" style="height:${h}%"></div>` : ''}
+      </div>
+      <div class="bar-lbl">${d.label}</div>
+      <div class="bar-amt">${d.rev>0?(d.rev>=1000?(d.rev/1000).toFixed(1)+'k':d.rev):'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════
+   ESPN SYNC
+════════════════════════════════ */
+async function loadESPNStatus() {
+  const badge = document.getElementById('syncStatusBadge');
+  const body  = document.getElementById('syncStatusBody');
+  const dets  = document.getElementById('espnDetails');
+  badge.textContent = '…';
+  try {
+    const r = await fetch(`${SERVER}/api/espn/sync-status`);
+    const d = await r.json();
+    const ss = d.syncStats || {};
+    badge.textContent = d.isRunning ? 'RUNNING' : 'IDLE';
+    badge.className   = `ph-badge ${d.isRunning ? 'pb-amber' : 'pb-lime'}`;
+    const rows = [
+      ['Last Run',    ss.lastRun ? fmtDate(ss.lastRun) : 'Never'],
+      ['Tips Updated', ss.tipsUpdated ?? '—'],
+      ['Leagues Fetched', ss.leaguesFetched ?? '—'],
+      ['Errors',      ss.errors ?? 0],
+      ['Firebase',    d.firebaseConnected ? '✓ Connected' : '✗ Offline'],
+      ['Sync Status', d.isRunning ? '🔄 Running now' : '✓ Idle'],
+    ];
+    const html = rows.map(([l,v]) =>
+      `<div class="sync-row"><span class="sync-lbl">${l}</span><span class="sync-val">${esc(String(v))}</span></div>`
+    ).join('');
+    if (body) body.innerHTML = html;
+    if (dets) dets.innerHTML = html;
+    document.getElementById('e-leagues').textContent = ss.leaguesFetched ?? '—';
+    document.getElementById('e-tips').textContent    = ss.tipsUpdated   ?? '—';
+    document.getElementById('e-err').textContent     = ss.errors        ?? 0;
+    document.getElementById('e-running').textContent = d.isRunning ? 'YES' : 'NO';
+  } catch(e) {
+    if (body) body.innerHTML = `<div class="sync-row"><span style="color:var(--red)">Failed: ${esc(e.message)}</span></div>`;
+  }
+}
+setInterval(() => { if (document.getElementById('syncStatusBody')) loadESPNStatus(); }, 60000);
+loadESPNStatus();
+
+async function manualSync() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true; btn.textContent = '⏳ Syncing…';
+  try {
+    const r = await fetch(`${SERVER}/api/espn/manual-sync`, { method:'POST' });
+    const d = await r.json();
+    toast(d.success ? '✓ Sync triggered' : d.error, d.success ? 'ok' : 'err');
+    setTimeout(loadESPNStatus, 2000);
+  } catch(e) { toast('Sync failed: ' + e.message, 'err'); }
+  finally { setTimeout(() => { btn.disabled=false; btn.textContent='▶ Run Manual Sync Now'; }, 5000); }
+}
+
+async function searchESPN() {
+  const q    = document.getElementById('espnSearch').value.trim();
+  const slug = document.getElementById('espnSlug').value;
+  const el   = document.getElementById('espnResults');
+  el.innerHTML = `<div class="state-box"><div class="state-spin"></div></div>`;
+  try {
+    const r = await fetch(`${SERVER}/api/espn/search?slug=${encodeURIComponent(slug)}&q=${encodeURIComponent(q)}`);
+    const d = await r.json();
+    if (!d.events?.length) { el.innerHTML = `<div class="state-box"><div class="state-txt">No matches found</div></div>`; return; }
+    el.innerHTML = d.events.map(ev => {
+      const s = ev.scoreStr || '—';
+      const st = ev.isLive ? '🔴 LIVE' : ev.isFinished ? '✅ FT' : '🕐 Sched';
+      return `<div class="live-row" style="margin-top:4px">
+        <div style="flex:1">
+          <div class="live-ph">${esc(ev.homeName)} vs ${esc(ev.awayName)}</div>
+          <div class="live-meta">ESPN ID: <strong>${esc(ev.espnId)}</strong> · ${st} · ${s}${ev.clock?' ('+esc(ev.clock)+')':''}</div>
+        </div>
+        <button class="row-act grant" onclick="copyId('${esc(ev.espnId)}')" title="Copy ESPN ID">Copy ID</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div class="state-box"><span style="color:var(--red)">${esc(e.message)}</span></div>`; }
+}
+function copyId(id) { navigator.clipboard.writeText(id).then(() => toast(`Copied ESPN ID: ${id}`,'ok')); }
+
+/* ════════════════════════════════
+   TIPS
+════════════════════════════════ */
+async function loadTips(dateKey) {
+  const dk  = dateKey || todayKE();
+  const btn = document.getElementById('tipsDatePicker');
+  if (btn && !dateKey) btn.value = dk;
+  document.getElementById('tipsDateBadge').textContent = dk;
+  const body = document.getElementById('tipsBody');
+  body.innerHTML = `<tr><td colspan="7"><div class="state-box"><div class="state-spin"></div></div></td></tr>`;
+  try {
+    const r = await fetch(`${SERVER}/api/tips/public?date=${dk}`);
+    const d = await r.json();
+    allTips = d.tips || [];
+    const graded  = allTips.filter(t => t.result === 'win' || t.result === 'loss').length;
+    const pending = allTips.length - graded;
+    const wins    = allTips.filter(t => t.result === 'win').length;
+    const wr      = graded > 0 ? Math.round(wins/graded*100)+'%' : '—';
+    document.getElementById('t-total').textContent   = allTips.length;
+    document.getElementById('t-graded').textContent  = graded;
+    document.getElementById('t-pending').textContent = pending;
+    document.getElementById('t-wr').textContent      = wr;
+    document.getElementById('badge-tips').textContent = pending;
+    if (!allTips.length) {
+      body.innerHTML = `<tr><td colspan="7"><div class="state-box"><span class="state-icon">📭</span><div class="state-txt">No tips for ${dk}</div></div></td></tr>`;
+      return;
+    }
+    body.innerHTML = allTips.map(t => {
+      const tip = t.tip || t.selection || t.market || '—';
+      const resultCls = t.result === 'win' ? 'pb-lime' : t.result === 'loss' ? 'pb-red' : 'pb-amber';
+      const resultLbl = t.result ? t.result.toUpperCase() : 'PENDING';
+      return `<tr data-tipid="${esc(t.id)}" data-dk="${esc(dk)}">
+        <td>${esc(t.matchLabel||`${t.homeTeam} vs ${t.awayTeam}`)}</td>
+        <td class="mono" style="font-size:.65rem">${esc(t.league||'—')}</td>
+        <td class="mono">${esc(t.kickoff||'—')}</td>
+        <td><span class="pill pb-cyan">${esc(tip)}</span></td>
+        <td><span class="pill ${resultCls}">${resultLbl}</span></td>
+        <td class="mono">${esc(t.score||t.outcome||'—')}</td>
+        <td>
+          <div class="grade-form">
+            <input class="grade-inp" type="text" placeholder="2-1" id="score-${esc(t.id)}" value="${esc(t.score||'')}">
+            <button class="grade-btn win" onclick="gradeTip('${esc(dk)}','${esc(t.id)}','win')">✓ Win</button>
+            <button class="grade-btn loss" onclick="gradeTip('${esc(dk)}','${esc(t.id)}','loss')">✗ Loss</button>
+            <button class="grade-btn del" onclick="deleteTip('${esc(dk)}','${esc(t.id)}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="7"><div class="state-box"><span style="color:var(--red)">${esc(e.message)}</span></div></td></tr>`;
+  }
+}
+async function gradeTip(dk, tipId, result) {
+  const scoreEl = document.getElementById(`score-${tipId}`);
+  const score   = scoreEl ? scoreEl.value.trim() : '';
+  try {
+    const r = await fetch(`${SERVER}/api/tips/${dk}/${tipId}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result, score })
+    });
+    const d = await r.json();
+    if (d.success) { toast(`✓ Graded ${result.toUpperCase()} · ${score||'no score'}`, 'ok'); loadTips(dk); }
+    else toast(`Error: ${d.error}`, 'err');
+  } catch(e) { toast('Grade failed: ' + e.message, 'err'); }
+}
+async function deleteTip(dk, tipId) {
+  if (!confirm('Delete this tip?')) return;
+  try {
+    const r = await fetch(`${SERVER}/api/tips/${dk}/${tipId}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { toast('Tip deleted','ok'); loadTips(dk); }
+    else toast(`Error: ${d.error}`, 'err');
+  } catch(e) { toast('Delete failed: ' + e.message, 'err'); }
+}
+
+/* ════════════════════════════════
+   REVENUE PAGE
+════════════════════════════════ */
+function renderRevenuePage() {
+  const today = todayKE();
+  const days14= buildDayBuckets(14); fillDayBuckets(days14);
+  const todaySubs  = allSubs.filter(s => (s.unlockedAt||'').startsWith(today));
+  const weekSubs   = allSubs.filter(s => { const d=new Date(s.unlockedAt||0); return (Date.now()-d.getTime()) < 7*86400000; });
+  document.getElementById('r-today').textContent   = `KES ${(todaySubs.length*PRICE).toLocaleString()}`;
+  document.getElementById('r-week').textContent    = `KES ${(weekSubs.length*PRICE).toLocaleString()}`;
+  document.getElementById('r-alltime').textContent = `KES ${(allSubs.length*PRICE).toLocaleString()}`;
+  setTimeout(() => { renderRevChart('revChart14', days14); }, 100);
+  const tb = document.getElementById('revTableBody');
+  if (!allSubs.length) { tb.innerHTML = `<tr><td colspan="6"><div class="state-box"><span class="state-icon">💰</span><div class="state-txt">No subscribers yet</div></div></td></tr>`; return; }
+  tb.innerHTML = allSubs.map((s,i) => `<tr>
+    <td class="mono">${i+1}</td>
+    <td class="mono">${esc(s.phone||'—')}</td>
+    <td class="mono" style="font-size:.65rem">${fmtDate(s.unlockedAt)}</td>
+    <td><span style="color:var(--lime);font-family:var(--fm);font-size:.72rem">KES ${s.amount||PRICE}</span></td>
+    <td class="mono" style="font-size:.62rem">${esc(s.mpesaCode||'—')}</td>
+    <td class="mono" style="font-size:.6rem;color:var(--muted)">${esc(s.txRef||'—')}</td>
+  </tr>`).join('');
+}
+
+/* ════════════════════════════════
+   USERS PAGE
+════════════════════════════════ */
+function renderUsersPage() {
+  const today = todayKE();
+  const todaySubs = allSubs.filter(s => (s.unlockedAt||'').startsWith(today));
+  const weekSubs  = allSubs.filter(s => { const d=new Date(s.unlockedAt||0); return (Date.now()-d.getTime()) < 7*86400000; });
+  document.getElementById('u-total').textContent = allSubs.length;
+  document.getElementById('u-today').textContent = todaySubs.length;
+  document.getElementById('u-avg').textContent   = weekSubs.length > 0 ? Math.round(weekSubs.length/7) : '—';
+  document.getElementById('subCount').textContent = allSubs.length;
+  filterUsers();
+}
+function filterUsers() {
+  const q   = (document.getElementById('userSearch')?.value||'').toLowerCase();
+  const df  = document.getElementById('userDateFilter')?.value || 'all';
+  const today = todayKE();
+  filtSubs = allSubs.filter(s => {
+    const matchQ = !q || (s.phone||'').toLowerCase().includes(q) || (s.mpesaCode||'').toLowerCase().includes(q);
+    const matchD = df === 'all' ? true :
+      df === 'today' ? (s.unlockedAt||'').startsWith(today) :
+      (Date.now() - new Date(s.unlockedAt||0).getTime()) < 7*86400000;
+    return matchQ && matchD;
+  });
+  subPage = 1; renderUsersTable();
+}
+function renderUsersTable() {
+  const body  = document.getElementById('usersBody'); if (!body) return;
+  const start = (subPage-1) * PAGE_SZ;
+  const slice = filtSubs.slice(start, start+PAGE_SZ);
+  if (!slice.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="state-box"><span class="state-icon">👥</span><div class="state-txt">No subscribers found</div></div></td></tr>`;
+  } else {
+    body.innerHTML = slice.map((s,i) => `<tr>
+      <td class="mono">${start+i+1}</td>
+      <td class="mono">${esc(s.phone||'—')}</td>
+      <td class="mono" style="font-size:.65rem">${fmtDate(s.unlockedAt)}</td>
+      <td><span style="color:var(--lime);font-family:var(--fm);font-size:.72rem">KES ${s.amount||PRICE}</span></td>
+      <td class="mono" style="font-size:.62rem">${esc(s.mpesaCode||'—')}</td>
+      <td class="mono" style="font-size:.6rem;color:var(--muted)">${esc(s.txRef||'—')}</td>
+      <td><button class="row-act" onclick="revokeUser('${esc(s.phone||'')}')">Revoke</button></td>
+    </tr>`).join('');
+  }
+  document.getElementById('usersInfo').textContent = `Showing ${start+1}–${Math.min(start+PAGE_SZ,filtSubs.length)} of ${filtSubs.length}`;
+  renderPages('userPages', Math.ceil(filtSubs.length/PAGE_SZ), subPage, p => { subPage=p; renderUsersTable(); });
+}
+async function revokeUser(phone) {
+  if (!confirm(`Revoke access for ${phone}?`)) return;
+  try {
+    await rtdb.ref(`proSubscribers/${phone.replace(/\D/g,'')}`).remove();
+    toast(`✓ Revoked ${phone}`, 'ok');
+  } catch(e) { toast('Revoke failed: '+e.message,'err'); }
+}
+
+/* ════════════════════════════════
+   PAYMENTS PAGE
+════════════════════════════════ */
+function renderPaymentsPage() {
+  const ok   = allPayments.filter(p => p.status==='completed'||p.status==='confirmed').length;
+  const pend = allPayments.filter(p => p.status==='pending').length;
+  const fail = allPayments.filter(p => p.status==='failed').length;
+  document.getElementById('p-ok').textContent   = ok;
+  document.getElementById('p-pend').textContent = pend;
+  document.getElementById('p-fail').textContent = fail;
+  document.getElementById('p-vol').textContent  = `KES ${(ok*PRICE).toLocaleString()}`;
+  filterPayments();
+}
+function filterPayments() {
+  const q  = (document.getElementById('paySearch')?.value||'').toLowerCase();
+  const sf = document.getElementById('payStatusFilter')?.value||'all';
+  filtPays = allPayments.filter(p => {
+    const matchQ  = !q || (p.phone||'').toLowerCase().includes(q) || (p._ref||'').toLowerCase().includes(q);
+    const pSt     = p.status||'pending';
+    const matchSt = sf==='all' ? true : sf==='completed' ? (pSt==='completed'||pSt==='confirmed') : pSt===sf;
+    return matchQ && matchSt;
+  });
+  payPage = 1; renderPaymentsTable();
+}
+function renderPaymentsTable() {
+  const body  = document.getElementById('paymentsBody'); if (!body) return;
+  const start = (payPage-1)*PAGE_SZ;
+  const slice = filtPays.slice(start, start+PAGE_SZ);
+  if (!slice.length) {
+    body.innerHTML = `<tr><td colspan="8"><div class="state-box"><span class="state-icon">💳</span><div class="state-txt">No payments found</div></div></td></tr>`;
+  } else {
+    body.innerHTML = slice.map((p,i) => {
+      const st  = p.status||'pending';
+      const cls = (st==='completed'||st==='confirmed') ? 'pill-lime' : st==='pending' ? 'pill-amber' : 'pb-red';
+      return `<tr>
+        <td class="mono">${start+i+1}</td>
+        <td class="mono">${esc(p.phone||'—')}</td>
+        <td class="mono" style="font-size:.6rem;color:var(--muted)">${esc(p._ref||'—')}</td>
+        <td><span style="color:var(--lime);font-family:var(--fm);font-size:.72rem">KES ${p.amount||PRICE}</span></td>
+        <td class="mono" style="font-size:.62rem">${esc(p.mpesaCode||'—')}</td>
+        <td><span class="pill ${cls}">${st.toUpperCase()}</span></td>
+        <td class="mono" style="font-size:.62rem">${fmtDate(p.createdAt)}</td>
+        <td>${(st==='completed'||st==='confirmed') ? '' :
+          `<button class="row-act grant" onclick="markPaid('${esc(p._ref||'')}','${esc(p.phone||'')}')">Mark Paid</button>`}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('paymentsInfo').textContent = `Showing ${start+1}–${Math.min(start+PAGE_SZ,filtPays.length)} of ${filtPays.length}`;
+  renderPages('payPages', Math.ceil(filtPays.length/PAGE_SZ), payPage, p => { payPage=p; renderPaymentsTable(); });
+}
+async function markPaid(txRef, phone) {
+  if (!confirm(`Mark ${txRef} as completed and grant access to ${phone}?`)) return;
+  try {
+    const digits = phone.replace(/\D/g,'');
+    await rtdb.ref(`proPayments/${txRef}`).update({ status:'completed', completedAt: new Date().toISOString() });
+    if (digits) await rtdb.ref(`proSubscribers/${digits}`).set({ phone, txRef, unlockedAt: new Date().toISOString(), amount: PRICE, mpesaCode: 'MANUAL' });
+    toast(`✓ Marked paid · ${phone}`, 'ok');
+  } catch(e) { toast('Failed: '+e.message,'err'); }
+}
+
+/* ════════════════════════════════
+   PAGINATION
+════════════════════════════════ */
+function renderPages(wrapperId, total, current, cb) {
+  const el = document.getElementById(wrapperId); if (!el) return;
+  el.innerHTML = '';
+  for (let i=1; i<=total && i<=8; i++) {
+    const b = document.createElement('button');
+    b.className = `pg-btn${i===current?' on':''}`;
+    b.textContent = i;
+    b.onclick = () => cb(i);
+    el.appendChild(b);
+  }
+}
+
+/* ════════════════════════════════
+   EXPORT CSV
+════════════════════════════════ */
+function exportCSV() {
+  const rows = [['Phone','Unlocked At','Amount','M-Pesa Code','Tx Ref']];
+  allSubs.forEach(s => rows.push([s.phone||'',s.unlockedAt||'',s.amount||PRICE,s.mpesaCode||'',s.txRef||'']));
+  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href=url; a.download=`subscribers_${todayKE()}.csv`; a.click();
+  toast('CSV exported', 'ok');
+}
+
+/* ════════════════════════════════
+   REFRESH ALL
+════════════════════════════════ */
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  toast('Refreshing…');
+  try {
+    await loadFirebaseData();
+    updateKPIs(); renderLiveSubs(); renderPayFeed(); renderDonut(); renderSparkline();
+    const days7 = buildDayBuckets(7); fillDayBuckets(days7);
+    renderRevChart('revChart', days7);
+    pingServer(); loadESPNStatus();
+    toast('✓ Refreshed', 'ok');
+  } catch(e) { toast('Refresh error: '+e.message,'err'); }
+  btn.classList.remove('spinning');
+}
+
+/* ════════════════════════════════
+   BOOT
+════════════════════════════════ */
+(async function boot() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('revChart').innerHTML = `<div class="state-box"><div class="state-spin"></div></div>`;
+  const dp = document.getElementById('tipsDatePicker');
+  if (dp) dp.value = todayKE();
+  setInterval(refreshAll, 60000);
+})();
+
+let _chartInit = false;
+rtdb.ref('proSubscribers').on('value', () => {
+  if (!_chartInit) {
+    _chartInit = true;
+    setTimeout(() => {
+      const days7 = buildDayBuckets(7); fillDayBuckets(days7);
+      renderRevChart('revChart', days7);
+    }, 400);
+  }
+});
+</script>
+</body>
+</html>
