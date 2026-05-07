@@ -1,286 +1,1711 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Virtual Soccer Analyzer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #f8f9fa; }
-    textarea { height: 180px; font-family: monospace; }
-    pre {
-      background-color: #fff;
-      padding: 1rem;
-      border: 1px solid #dee2e6;
-      border-radius: 0.5rem;
-      max-height: 400px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    .badge-counter {
-      font-size: 1rem;
-      padding: 0.4em 0.7em;
-      background-color: #0d6efd;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOOTY.AI — Match Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d0f14;
+  --surface:  #141820;
+  --panel:    #1a1f2b;
+  --border:   rgba(255,255,255,0.08);
+  --border-md:rgba(255,255,255,0.14);
+  --txt:      #e8eaf0;
+  --txt-2:    #8b91a1;
+  --txt-3:    #555e72;
+  --accent:   #4ade80;
+  --accent-d: #22c55e;
+  --gold:     #f59e0b;
+  --danger:   #f87171;
+  --info:     #60a5fa;
+  --purple:   #a78bfa;
+  --radius:   6px;
+  --radius-lg:10px;
+  --font:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --display:  'Playfair Display', serif;
+  --shadow:   0 2px 16px rgba(0,0,0,0.4);
+}
+html.light {
+  --bg:       #f5f6f8;
+  --surface:  #ffffff;
+  --panel:    #eef0f4;
+  --border:   rgba(0,0,0,0.09);
+  --border-md:rgba(0,0,0,0.16);
+  --txt:      #111318;
+  --txt-2:    #4a5068;
+  --txt-3:    #9097b0;
+  --accent:   #16a34a;
+  --accent-d: #15803d;
+  --gold:     #d97706;
+  --danger:   #dc2626;
+  --info:     #2563eb;
+  --purple:   #7c3aed;
+  --shadow:   0 2px 16px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--font);font-weight:400;min-height:100vh;overflow-x:hidden;font-size:15px;line-height:1.6}
+.shell{max-width:1200px;margin:0 auto;padding:0 24px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+header{padding:28px 0 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.wordmark{font-family:var(--display);font-size:1.75rem;font-weight:900;letter-spacing:-0.5px;color:var(--txt)}
+.wordmark em{font-style:normal;color:var(--accent)}
+.hdr-meta{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.hdr-stat{font-family:var(--mono);font-size:0.72rem;color:var(--txt-2);letter-spacing:0.5px}
+.hdr-stat strong{display:block;font-size:1.05rem;font-weight:500;color:var(--txt);font-family:var(--font);letter-spacing:0}
+.theme-btn{background:var(--surface);border:1px solid var(--border-md);border-radius:20px;padding:5px 14px 5px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.68rem;letter-spacing:0.5px;color:var(--txt-2);transition:all 0.18s}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toggle-track{width:28px;height:15px;background:var(--panel);border-radius:8px;border:1px solid var(--border-md);position:relative;transition:all 0.25s}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:var(--txt-3);transition:transform 0.25s,background 0.25s}
+html.light .toggle-thumb{transform:translateX(13px);background:var(--accent)}
+.tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;gap:0;margin-bottom:0;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--txt-3);font-family:var(--mono);font-size:0.72rem;letter-spacing:0.8px;text-transform:uppercase;padding:14px 20px;cursor:pointer;white-space:nowrap;transition:all 0.18s}
+.tab:hover{color:var(--txt)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none;padding:28px 0}
+.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px}
+.card+.card{margin-top:16px}
+.card-hd{font-family:var(--mono);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--txt-3);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-hd::before{content:'';display:block;width:16px;height:1px;background:var(--accent);flex-shrink:0}
+textarea,select,input[type=text],input[type=date],input[type=time]{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);color:var(--txt);font-family:var(--mono);font-size:0.85rem;padding:10px 13px;outline:none;transition:border-color 0.18s;appearance:none}
+textarea{min-height:160px;resize:vertical;line-height:1.7}
+textarea:focus,select:focus,input:focus{border-color:var(--accent)}
+select option{background:#1a1f2b}
+html.light select option{background:#ffffff}
+label.fld{display:block;font-family:var(--mono);font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt-3);margin-bottom:5px}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-md);border-radius:var(--radius);font-family:var(--mono);font-size:0.7rem;letter-spacing:1px;text-transform:uppercase;padding:9px 18px;cursor:pointer;transition:all 0.18s;background:transparent;color:var(--txt-2);white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#000;font-weight:500}
+.btn-primary:hover{background:var(--accent-d);border-color:var(--accent-d);color:#000}
+.btn-danger{border-color:rgba(248,113,113,0.3);color:var(--danger)}
+.btn-danger:hover{background:rgba(248,113,113,0.1)}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:500}
+.btn-gold:hover{opacity:0.9}
+.btn-ai{background:linear-gradient(135deg,#7c3aed,#4f46e5);border:none;color:#fff;font-weight:500}
+.btn-ai:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-post{background:var(--accent);border-color:var(--accent);color:#000;font-weight:500}
+.btn-post:hover:not(:disabled){background:var(--accent-d);border-color:var(--accent-d)}
+.btn-post:disabled{background:var(--panel);border-color:var(--border);color:var(--txt-3);cursor:not-allowed}
+.btn-sm{padding:5px 11px;font-size:0.63rem}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-family:var(--mono);font-size:0.62rem;font-weight:500;letter-spacing:0.5px;text-transform:uppercase}
+.pill-green{background:rgba(74,222,128,0.12);color:var(--accent);border:1px solid rgba(74,222,128,0.25)}
+.pill-gold{background:rgba(245,158,11,0.12);color:var(--gold);border:1px solid rgba(245,158,11,0.25)}
+.pill-red{background:rgba(248,113,113,0.1);color:var(--danger);border:1px solid rgba(248,113,113,0.25)}
+.pill-blue{background:rgba(96,165,250,0.1);color:var(--info);border:1px solid rgba(96,165,250,0.25)}
+.pill-purple{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.25)}
+.ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 11px;font-family:var(--mono);font-size:0.63rem;letter-spacing:1px;text-transform:uppercase;color:var(--purple)}
+.ai-badge::before{content:'✦';font-size:0.55rem}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.84rem}
+.stat-row:last-child{border-bottom:none}
+.stat-l{color:var(--txt-2);font-size:0.78rem}
+.stat-v{font-family:var(--mono);font-weight:500;color:var(--txt);font-size:0.82rem}
+.form-bar{display:flex;gap:3px;margin:6px 0}
+.fd{width:20px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.62rem;font-weight:500}
+.fd.W{background:rgba(74,222,128,0.18);color:var(--accent)}
+.fd.D{background:rgba(245,158,11,0.15);color:var(--gold)}
+.fd.L{background:rgba(248,113,113,0.12);color:var(--danger)}
+.prob-wrap{margin:18px 0}
+.prob-lr{display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:5px;color:var(--txt-2)}
+.prob-bar{height:7px;border-radius:4px;background:var(--panel);display:flex;overflow:hidden}
+.prob-seg{height:100%;transition:width 0.8s cubic-bezier(.4,0,.2,1)}
+.prob-seg.h{background:var(--accent)}
+.prob-seg.d{background:var(--gold)}
+.prob-seg.a{background:var(--danger)}
+.score-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.score-chip{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:7px 13px;font-family:var(--mono);font-size:1.15rem;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:64px;text-align:center;transition:border-color 0.18s}
+.score-chip:first-child{border-color:var(--accent)}
+.score-chip .pct{font-size:0.58rem;color:var(--txt-3);font-weight:400}
+.safe-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius-lg);padding:16px;margin-bottom:11px}
+.safe-card.amber{border-left-color:var(--gold)}
+.safe-card.red{border-left-color:var(--danger)}
+.safe-team{font-family:var(--display);font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.safe-note{font-size:0.77rem;color:var(--txt-2);margin-top:5px;font-style:italic}
+.safe-cast{font-size:0.77rem;color:var(--gold);margin-top:3px}
+.intel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:11px}
+.intel-name{font-family:var(--display);font-size:1.25rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.intel-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+@media(max-width:600px){.intel-grid{grid-template-columns:repeat(3,1fr)}}
+.ig-item{text-align:center}
+.ig-v{font-family:var(--mono);font-size:0.88rem;font-weight:500;color:var(--accent)}
+.ig-l{font-size:0.6rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:0.8px;margin-top:1px}
+.cmp-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:0.84rem}
+.cmp-table th{font-family:var(--mono);font-size:0.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt-3);padding:9px 13px;text-align:left;border-bottom:1px solid var(--border)}
+.cmp-table td{padding:9px 13px;border-bottom:1px solid var(--border)}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table .hl{color:var(--accent);font-weight:500}
+.cmp-winner td{background:rgba(74,222,128,0.05);font-family:var(--mono);font-size:0.78rem}
+.sec-title{font-family:var(--mono);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--txt-3);margin:22px 0 12px;display:flex;align-items:center;gap:10px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.acc-panel{background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.18);border-radius:var(--radius-lg);padding:18px;margin-top:18px}
+.acc-title{font-family:var(--mono);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--purple);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.acc-title::after{content:'';flex:1;height:1px;background:rgba(167,139,250,0.18)}
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:9px;margin-bottom:12px}
+.acc-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:11px}
+.acc-lbl{font-family:var(--mono);font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt-3);margin-bottom:3px}
+.acc-val{font-family:var(--mono);font-size:0.95rem;font-weight:500}
+.acc-val.g{color:var(--accent)}.acc-val.a{color:var(--gold)}.acc-val.r{color:var(--danger)}
+.acc-sub{font-family:var(--mono);font-size:0.6rem;color:var(--txt-3);margin-top:2px}
+.conf-meter{margin:12px 0}
+.conf-bar{height:10px;background:var(--panel);border-radius:5px;overflow:hidden;margin-top:5px}
+.conf-fill{height:100%;border-radius:5px;transition:width 0.8s cubic-bezier(.4,0,.2,1)}
+.conf-row{font-family:var(--mono);font-size:0.68rem;color:var(--txt-3);display:flex;justify-content:space-between;margin-bottom:3px}
+.gate-warn{background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.22);border-radius:var(--radius-lg);padding:16px 18px;font-family:var(--mono);font-size:0.78rem;color:var(--danger);display:flex;align-items:flex-start;gap:12px}
+.gate-ico{font-size:1.3rem;flex-shrink:0;margin-top:1px}
+.ai-out{background:var(--surface);border:1px solid rgba(167,139,250,0.22);border-radius:var(--radius-lg);padding:22px;margin-top:14px;font-size:0.88rem;line-height:1.85;color:var(--txt);white-space:pre-wrap;font-family:var(--font)}
+.ai-out h3{font-family:var(--display);font-size:1.15rem;font-weight:700;color:var(--accent);margin:18px 0 6px;letter-spacing:-0.3px}
+.ai-out h3:first-child{margin-top:0}
+.ai-out strong{color:var(--gold);font-weight:500}
+.ai-out em{color:var(--txt-2);font-style:normal;font-size:0.82rem}
+.ai-out p{margin:4px 0;line-height:1.85}
+.ai-out ol,.ai-out ul{margin:8px 0 8px 18px;line-height:1.9}
+.ai-out li{margin-bottom:3px}
+.ai-out code{font-family:var(--mono);background:var(--panel);padding:1px 5px;border-radius:3px;font-size:0.85em}
+@keyframes pulse-bd{0%,100%{border-color:rgba(167,139,250,0.22)}50%{border-color:rgba(167,139,250,0.5)}}
+.ai-out.streaming{animation:pulse-bd 1.6s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+.ai-spin{width:18px;height:18px;border:2px solid rgba(167,139,250,0.2);border-top-color:var(--purple);border-radius:50%;animation:spin 0.7s linear infinite}
+.loading{display:flex;align-items:center;gap:10px;color:var(--txt-3);font-family:var(--mono);font-size:0.73rem;padding:16px 0}
+.ai-loading{display:flex;align-items:center;gap:12px;padding:28px;justify-content:center;color:var(--purple);font-family:var(--mono);font-size:0.75rem}
+.fix-hero{display:flex;align-items:center;justify-content:center;gap:20px;padding:22px;margin-bottom:18px;background:linear-gradient(135deg,rgba(74,222,128,0.04),rgba(167,139,250,0.04));border:1px solid var(--border);border-radius:var(--radius-lg)}
+.fix-team{font-family:var(--display);font-size:1.8rem;font-weight:900}
+.fix-vs{font-family:var(--mono);font-size:0.75rem;color:var(--txt-3);letter-spacing:2px}
+.post-ctrl{background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.18);border-radius:var(--radius-lg);padding:18px;margin-top:18px}
+.post-hd{font-family:var(--mono);font-size:0.63rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.post-hd::before{content:'';display:block;width:14px;height:1px;background:var(--accent)}
+.post-tip-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-bottom:12px}
+@media(max-width:500px){.post-tip-row{grid-template-columns:1fr}}
+.kickoff-in{background:var(--panel);border:1px solid rgba(245,158,11,0.35);border-radius:var(--radius);color:var(--gold);font-family:var(--mono);font-size:1.1rem;letter-spacing:2px;padding:6px 10px;outline:none;width:110px;text-align:center;transition:border-color 0.18s}
+.kickoff-in:focus{border-color:var(--gold)}
+.kickoff-in::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) saturate(3) hue-rotate(5deg);cursor:pointer}
+.prev-strip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:9px 13px;margin-bottom:12px;font-family:var(--mono);font-size:0.68rem;color:var(--txt-3)}
+.prev-match{font-family:var(--display);font-size:1rem;font-weight:700;color:var(--txt)}
+.prev-tip-pill{background:rgba(74,222,128,0.14);border:1px solid rgba(74,222,128,0.3);border-radius:3px;padding:2px 9px;font-family:var(--mono);font-size:0.7rem;font-weight:500;color:var(--accent)}
+.time-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.28);border-radius:3px;padding:2px 8px;font-family:var(--mono);font-size:0.88rem;font-weight:500;color:var(--gold)}
+.cd{font-size:0.66rem;padding:2px 7px;border-radius:2px}
+.cd.future{background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);color:var(--accent)}
+.cd.past{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);color:var(--danger)}
+.tip-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.tip-row:last-child{border-bottom:none}
+.tip-match{font-family:var(--display);font-size:1.05rem;font-weight:700}
+.tip-meta{font-family:var(--mono);font-size:0.63rem;color:var(--txt-3);margin-top:2px}
+.tip-actions{display:flex;gap:7px;align-items:center}
+.res-badge{display:inline-flex;align-items:center;gap:4px;border-radius:3px;padding:2px 9px;font-family:var(--mono);font-size:0.7rem;font-weight:500;letter-spacing:0.5px;text-transform:uppercase}
+.res-badge.win{background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);color:var(--accent)}
+.res-badge.loss{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);color:var(--danger)}
+.res-badge.pend{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:var(--gold)}
+.checker-stat{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:9px 14px;font-family:var(--mono);font-size:0.75rem}
+.checker-stat b{font-family:var(--display);font-size:1.3rem;font-weight:700;font-style:normal}
+.checker-stat b.g{color:var(--accent)}.checker-stat b.r{color:var(--danger)}.checker-stat b.a{color:var(--gold)}
+.tip-res-match{font-family:var(--display);font-size:0.95rem;font-weight:700}
+.tip-res-mkt{font-family:var(--mono);font-size:0.68rem;color:var(--txt-3);margin-top:1px}
+.tip-score{font-family:var(--display);font-size:1rem;font-weight:700;color:var(--gold)}
+.tip-res-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
+.tip-res-row:last-child{border-bottom:none}
+.checker-panel{background:rgba(74,222,128,0.03);border:1px solid rgba(74,222,128,0.14);border-radius:var(--radius-lg);padding:18px;margin-top:18px}
+.checker-title{font-family:var(--mono);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.checker-title::after{content:'';flex:1;height:1px;background:rgba(74,222,128,0.18)}
+.save-progress{background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-family:var(--mono);font-size:0.72rem;color:var(--accent)}
+.save-progress .sp-bar-wrap{height:4px;background:var(--panel);border-radius:2px;margin-top:7px;overflow:hidden}
+.save-progress .sp-bar{height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s ease}
+.parse-prev{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden}
+.parse-prev-hd{padding:9px 13px;font-family:var(--mono);font-size:0.63rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt-3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.parse-match-row{display:flex;align-items:center;gap:10px;padding:7px 13px;border-bottom:1px solid var(--border);font-size:0.8rem}
+.parse-match-row:last-child{border-bottom:none}
+.parse-score{font-family:var(--display);font-size:1.05rem;font-weight:700;color:var(--accent);min-width:36px;text-align:center}
+.parse-team{flex:1;color:var(--txt);font-family:var(--mono);font-size:0.76rem}
+.parse-team.away{text-align:right}
+.parse-week{padding:5px 13px;background:rgba(74,222,128,0.05);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.58rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
+.match-entry{display:flex;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.78rem}
+.match-entry:last-child{border-bottom:none}
+.match-entry:hover{background:rgba(255,255,255,0.02)}
+.me-score{font-family:var(--display);font-size:1.05rem;font-weight:700;min-width:44px;text-align:center;color:var(--accent)}
+.me-team{flex:1;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me-team.away{text-align:right}
+.me-week{font-size:0.6rem;color:var(--txt-3);min-width:60px}
+.me-actions{display:flex;gap:5px;flex-shrink:0}
+.data-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search-input{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);color:var(--txt);font-family:var(--mono);font-size:0.8rem;padding:8px 12px;outline:none;transition:border-color 0.18s;width:220px}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--txt-3)}
+.data-stats-strip{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.ds-chip{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:7px 13px;font-family:var(--mono);font-size:0.68rem;color:var(--txt-2)}
+.ds-chip strong{color:var(--txt);font-size:0.88rem;display:block;font-family:var(--display);font-weight:700}
+.edit-form{background:var(--panel);border:1px solid var(--border-md);border-radius:var(--radius);padding:13px;margin:6px 0;display:grid;grid-template-columns:1fr auto auto 1fr auto auto;gap:8px;align-items:center}
+@media(max-width:600px){.edit-form{grid-template-columns:1fr 1fr;}}
+.edit-form input{padding:6px 10px;font-size:0.8rem}
+.scroll-area{max-height:520px;overflow-y:auto;padding-right:3px}
+.scroll-area::-webkit-scrollbar{width:3px}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border-md);border-radius:2px}
+.fp-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.73rem}
+.fp-row:last-child{border-bottom:none}
+.fp-sc{font-family:var(--display);font-size:1rem;font-weight:700;width:44px;flex-shrink:0}
+.fp-bar-w{flex:1;height:5px;background:var(--panel);border-radius:3px;overflow:hidden}
+.fp-bar{height:100%;border-radius:3px;background:var(--accent)}
+.fp-pct{width:48px;text-align:right;color:var(--txt-3);font-size:0.68rem}
+.fp-bias{padding:1px 7px;border-radius:2px;font-size:0.62rem}
+.fp-bias.over{background:rgba(74,222,128,0.12);color:var(--accent)}
+.fp-bias.under{background:rgba(248,113,113,0.1);color:var(--danger)}
+.fp-bias.neutral{background:rgba(245,158,11,0.1);color:var(--gold)}
+.empty{text-align:center;padding:48px 24px;color:var(--txt-3);font-family:var(--mono);font-size:0.78rem}
+.empty-ico{font-size:2rem;margin-bottom:10px;display:block}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);color:var(--txt);font-family:var(--mono);font-size:0.73rem;padding:11px 18px;border-radius:var(--radius);opacity:0;transform:translateY(10px);transition:all 0.25s;pointer-events:none;z-index:999}
+#toast.show{opacity:1;transform:translateY(0)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border-md);border-radius:var(--radius-lg);padding:24px;width:320px;box-shadow:var(--shadow)}
+.modal-title{font-family:var(--display);font-size:1.1rem;font-weight:700;margin-bottom:8px}
+.modal-msg{font-size:0.84rem;color:var(--txt-2);margin-bottom:18px;line-height:1.6}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.markov-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:0.72rem;margin-top:7px}
+.markov-table th{color:var(--txt-3);padding:5px 9px;text-align:center;border-bottom:1px solid var(--border);font-size:0.62rem;letter-spacing:0.8px}
+.markov-table td{padding:5px 9px;text-align:center;border-bottom:1px solid var(--border)}
+.markov-table td:first-child{text-align:left;color:var(--txt-3)}
+.markov-table tr:last-child td{border-bottom:none}
+a.btn{text-decoration:none}
+.btn-copy{background:var(--panel);border:1px solid var(--border-md);border-radius:var(--radius);font-family:var(--mono);font-size:0.63rem;letter-spacing:0.8px;padding:4px 11px;cursor:pointer;color:var(--txt-3);display:inline-flex;align-items:center;gap:5px;transition:all 0.18s;white-space:nowrap}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent);background:rgba(74,222,128,0.05)}
+.btn-copy.copied{border-color:var(--accent);color:var(--accent);background:rgba(74,222,128,0.08)}
+.copy-all-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+
+/* ── Checker-specific ── */
+.checker-input-section{background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px}
+.checker-input-hd{font-family:var(--mono);font-size:0.63rem;letter-spacing:2px;text-transform:uppercase;color:var(--info);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.checker-input-hd::before{content:'';display:block;width:12px;height:1px;background:var(--info);flex-shrink:0}
+.source-tabs{display:flex;gap:6px;margin-bottom:12px}
+.src-tab{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--mono);font-size:0.65rem;letter-spacing:0.8px;text-transform:uppercase;padding:6px 14px;cursor:pointer;color:var(--txt-3);transition:all 0.18s}
+.src-tab.active{background:rgba(96,165,250,0.1);border-color:rgba(96,165,250,0.35);color:var(--info)}
+.src-info{font-family:var(--mono);font-size:0.7rem;color:var(--txt-3);margin-bottom:8px;padding:6px 10px;background:var(--panel);border-radius:var(--radius)}
+.tip-already-graded{opacity:0.5;font-size:0.7rem;font-family:var(--mono);color:var(--txt-3);padding:8px 0;border-bottom:1px solid var(--border)}
+.already-badge{background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:3px;padding:1px 7px;font-family:var(--mono);font-size:0.6rem;color:var(--txt-3);margin-left:6px}
+
+/* ── Bulk select (Posted Tips) ── */
+.bulk-select-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:var(--radius);margin-bottom:12px}
+.bulk-sel-txt{font-family:var(--mono);font-size:0.72rem;color:var(--danger)}
+.select-all-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.sel-cb{width:15px;height:15px;accent-color:var(--danger);cursor:pointer;flex-shrink:0}
+.sel-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--txt-3);cursor:pointer}
+.tip-cb-wrap{display:flex;align-items:center;gap:10px;width:100%}
+</style>
 </head>
-<button onclick="location.href='Adm5in.html'" 
-        style="position: absolute; top: 70px; right: 10px; 
-               background-color: #4CAF50; color: white; 
-               padding: 10px 20px; border: none; 
-               border-radius: 5px; cursor: pointer; 
-               font-family: Arial, sans-serif;">
-  Go to Admin5
-</button>
-<body class="py-4">
-<div class="container">
-  <h1 class="mb-2 text-primary">⚽ Virtual Soccer Analyzer</h1>
+<body>
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <small class="text-muted">🔁 Version: <strong>v1.1 - June 2025</strong></small>
-    <span class="text-success" id="newlyAddedNote"></span>
-  </div>
-
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <label class="form-label">Fixtures and Odds</label>
-      <div id="fixtureFields">
-        <textarea class="form-control mb-2 fixture-input" placeholder="Paste fixtures here..."></textarea>
-      </div>
-      <button class="btn btn-sm btn-outline-secondary" onclick="addFixtureField()">+ Add Fixtures</button>
+<div class="shell">
+  <header>
+    <div class="wordmark">Footy<em>.</em>AI</div>
+    <div class="hdr-meta">
+      <div class="hdr-stat"><strong id="matchCount">0</strong>Matches</div>
+      <div class="hdr-stat"><strong id="teamCount">0</strong>Teams</div>
+      <div class="hdr-stat"><strong id="postedCount">0</strong>Tips live</div>
+      <a href="public-tips.html" target="_blank" class="btn" style="text-decoration:none">⬡ Public Page</a>
+      <button class="theme-btn" onclick="toggleTheme()">
+        <span id="themeIcon">☀</span>
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        <span id="themeLabel">Light</span>
+      </button>
     </div>
-    <div class="col-md-6">
-      <label class="form-label">Match Results</label>
-      <div id="resultFields">
-        <textarea class="form-control mb-2 result-input" placeholder="Paste results here..."></textarea>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" onclick="switchTab('input',this)">↑ Data Input</button>
+    <button class="tab" onclick="switchTab('data',this)">⊞ Manage Data</button>
+    <button class="tab" onclick="switchTab('predict',this)">✦ AI Predict</button>
+    <button class="tab" onclick="switchTab('posted',this)">≡ Posted Tips</button>
+    <button class="tab" onclick="switchTab('checker',this)">✓ Results</button>
+    <button class="tab" onclick="switchTab('compare',this)">↔ Compare</button>
+    <button class="tab" onclick="switchTab('safe',this)">⊙ Safe Matches</button>
+    <button class="tab" onclick="switchTab('teams',this)">⊛ Team Intel</button>
+    <button class="tab" onclick="switchTab('fingerprint',this)">⊕ RNG Fingerprint</button>
+  </nav>
+
+  <!-- ════ TAB: INPUT ════ -->
+  <div class="panel active" id="panel-input">
+    <div class="g2">
+      <div class="card">
+        <div class="card-hd">
+          <span>Paste Match Results</span>
+          <span style="font-family:var(--mono);font-size:0.63rem;color:var(--accent)">Smart Parser Active</span>
+        </div>
+        <textarea id="resultsInput" placeholder="Any format works:
+
+Format A — Week dump:
+English League WEEK 31 - #2026050408
+11:22 am
+Liverpool
+22
+London Reds
+
+Format B — 4-line classic:
+Arsenal
+2
+1
+Chelsea" oninput="liveParsePreview()"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addToStorage()">+ Add Results</button>
+          <button class="btn" onclick="downloadData()">↓ Export JSON</button>
+          <button class="btn btn-danger" onclick="confirmClearAll()">✕ Clear All</button>
+        </div>
+        <label style="margin-top:8px;display:block">
+          <input type="file" id="fileUpload" style="display:none" onchange="uploadData(event)">
+          <button class="btn" style="margin-top:4px" onclick="document.getElementById('fileUpload').click()">↑ Upload JSON</button>
+        </label>
+        <div id="parsePreviewArea"></div>
       </div>
-      <button class="btn btn-sm btn-outline-secondary" onclick="addResultField()">+ Add Results</button>
+      <div class="card">
+        <div class="card-hd">Smart Input Guide</div>
+        <div style="font-family:var(--mono);font-size:0.77rem;color:var(--txt-2);line-height:1.85">
+          <div style="color:var(--accent);margin-bottom:6px;font-size:0.65rem;letter-spacing:1px">FORMAT A — League Week Dump</div>
+          <div>• Week header auto-detected</div>
+          <div>• Timestamp lines skipped</div>
+          <div>• 2-digit score: <span style="color:var(--accent)">22 = 2-2, 10 = 1-0, 03 = 0-3</span></div>
+          <div style="color:var(--accent);margin-top:10px;margin-bottom:6px;font-size:0.65rem;letter-spacing:1px">FORMAT B — Classic 4-Line</div>
+          <div>• Home Team → Home Score → Away Score → Away Team</div>
+        </div>
+        <div style="margin-top:16px">
+          <div class="stat-row"><span class="stat-l">Algorithm</span><span class="stat-v">Poisson + ELO + Markov + RNG</span></div>
+          <div class="stat-row"><span class="stat-l">Min sample gate</span><span class="stat-v" style="color:var(--accent)">8 games / team</span></div>
+          <div class="stat-row"><span class="stat-l">Decay factor</span><span class="stat-v" style="color:var(--gold)">λ = 0.85 per game</span></div>
+          <div class="stat-row"><span class="stat-l">Lambda window</span><span class="stat-v">Rolling 5-game avg</span></div>
+          <div class="stat-row"><span class="stat-l">AI model</span><span class="stat-v">Grok via server</span></div>
+          <div class="stat-row"><span class="stat-l">Firebase</span><span class="stat-v" id="fbStatus">Checking…</span></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <button class="btn btn-primary" onclick="analyzeAndSave()">Analyze & Save</button>
-    <button class="btn btn-warning" onclick="clearInputs()">Clear Inputs</button>
-    <button class="btn btn-danger" onclick="clearStored()">Clear Stored Data</button>
-    
-    <button class="btn btn-success" onclick="copyNewMatches()">📋 Copy New Only</button>
+  <!-- ════ TAB: MANAGE DATA ════ -->
+  <div class="panel" id="panel-data">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">Stored Matches</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">View, edit and delete individual match records</div>
+      </div>
+      <button class="btn" onclick="loadDataTab()">↻ Refresh</button>
+    </div>
+    <div id="dataTabContent"><div class="empty"><span class="empty-ico">⊞</span>No matches stored yet</div></div>
   </div>
 
-  <div class="mb-3">
-    <label for="search" class="form-label">Search Results</label>
-    <input type="text" class="form-control" id="search" placeholder="Search team, result, odds..." oninput="searchResults()">
+  <!-- ════ TAB: AI PREDICT ════ -->
+  <div class="panel" id="panel-predict">
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd">
+        <span>Select Fixture</span>
+        <span class="ai-badge">Grok + 5-Layer Engine</span>
+      </div>
+      <div class="g2" style="gap:12px">
+        <div><label class="fld">Home Team</label><select id="team1"><option value="">— Select Home Team —</option></select></div>
+        <div><label class="fld">Away Team</label><select id="team2"><option value="">— Select Away Team —</option></select></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-ai" onclick="runAIPrediction()">✦ Run AI Prediction</button></div>
+    </div>
+    <div id="predOutput"><div class="empty"><span class="empty-ico">✦</span>Select two teams and run the 5-layer analysis</div></div>
   </div>
 
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="mb-0">Match Analysis</h4>
-    <span class="badge text-bg-primary badge-counter">Matches: <span id="matchCount">0</span></span>
+  <!-- ════ TAB: POSTED TIPS ════ -->
+  <div class="panel" id="panel-posted">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">Published Tips</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">Manage tips live on the public page</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="date" id="postedDateFilter" style="width:auto;padding:8px 12px" onchange="loadPostedTips()">
+        <button class="btn" onclick="loadPostedTips()">↻ Refresh</button>
+        <a href="public-tips.html" target="_blank" class="btn btn-primary" style="text-decoration:none">⬡ View Public</a>
+      </div>
+    </div>
+    <div id="postedTipsOutput"><div class="empty"><span class="empty-ico">≡</span>No tips posted yet today</div></div>
   </div>
 
-  <pre id="output">No analysis yet.</pre>
+  <!-- ════ TAB: RESULTS CHECKER ════ -->
+  <div class="panel" id="panel-checker">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">Results Checker</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">Only grades tips with no result yet — stored data is never required</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="date" id="checkerDateFilter" style="width:auto;padding:8px 12px">
+        <button class="btn btn-primary" onclick="runResultsCheck()">⚡ Check &amp; Save Results</button>
+      </div>
+    </div>
+
+    <!-- Match source input — always visible, independent of localStorage -->
+    <div class="checker-input-section">
+      <div class="checker-input-hd">Match Results Source</div>
+      <div class="source-tabs">
+        <button class="src-tab active" id="srcTabStored" onclick="switchCheckerSource('stored')">⊞ From Stored Data</button>
+        <button class="src-tab" id="srcTabPaste" onclick="switchCheckerSource('paste')">↑ Paste Results</button>
+      </div>
+      <div id="srcStoredInfo" class="src-info">Using locally stored matches (<span id="storedMatchCount">0</span> matches). Clearing storage won't affect already-graded tips on the server.</div>
+      <div id="srcPasteArea" style="display:none">
+        <div class="src-info">Paste match results below — same format as Data Input. No storage needed.</div>
+        <textarea id="checkerPasteInput" placeholder="Liverpool
+22
+London Reds
+
+Arsenal
+1
+0
+Chelsea" style="min-height:120px;margin-top:6px" oninput="updateCheckerPastePreview()"></textarea>
+        <div id="checkerPastePreview" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <div id="checkerOutput">
+      <div class="empty"><span class="empty-ico">✓</span>Select a date and click Check &amp; Save Results</div>
+    </div>
+  </div>
+
+  <!-- ════ TAB: SAFE MATCHES ════ -->
+  <div class="panel" id="panel-safe">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">Pattern Scanner</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">Consistent 5-game trends with decay weighting</div>
+      </div>
+      <button class="btn btn-primary" onclick="displaySafeMatches()">⊙ Scan Now</button>
+    </div>
+    <div id="safeMatchesOutput"><div class="empty"><span class="empty-ico">⊙</span>Click Scan Now to find patterns</div></div>
+  </div>
+
+  <!-- ════ TAB: TEAM INTEL ════ -->
+  <div class="panel" id="panel-teams">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">Team Intelligence</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">Stats, form, ELO + Markov states</div>
+      </div>
+      <button class="btn" onclick="renderTeamIntel()">↻ Refresh</button>
+    </div>
+    <div id="teamIntelOutput"><div class="empty"><span class="empty-ico">⊛</span>Add match data to see team intelligence</div></div>
+  </div>
+
+  <!-- ════ TAB: COMPARE ════ -->
+  <div class="panel" id="panel-compare">
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd">Head-to-Head Comparison</div>
+      <div class="g2" style="gap:12px">
+        <div><label class="fld">Team A</label><select id="teamA"><option value="">— Select Team A —</option></select></div>
+        <div><label class="fld">Team B</label><select id="teamB"><option value="">— Select Team B —</option></select></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-gold" onclick="compareTeamsHandler()">↔ Compare Teams</button></div>
+    </div>
+    <div id="comparisonResult"><div class="empty"><span class="empty-ico">↔</span>Select two teams to compare</div></div>
+  </div>
+
+  <!-- ════ TAB: RNG FINGERPRINT ════ -->
+  <div class="panel" id="panel-fingerprint">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:var(--display);font-size:1.5rem;font-weight:900">RNG Fingerprint</div>
+        <div style="color:var(--txt-3);font-size:0.8rem;margin-top:2px">Score biases vs Poisson expectation</div>
+      </div>
+      <button class="btn btn-primary" onclick="renderFingerprintTab()">⊕ Analyze</button>
+    </div>
+    <div id="fingerprintOutput"><div class="empty"><span class="empty-ico">⊕</span>Click Analyze to scan your dataset for RNG patterns</div></div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Confirm</div>
+    <div class="modal-msg" id="modalMsg">Are you sure?</div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
 <script>
-let allMatches = JSON.parse(localStorage.getItem("allMatches") || "[]");
+/* ══ CONFIG ══ */
+const SERVER_URL = 'https://voter-server-fmfr.onrender.com';
+const MIN_SAMPLE = 8;
+const DECAY_FACTOR = 0.85;
+const LAMBDA_WINDOW = 5;
+const ILEAGUE_MARKETS = [
+  { group: 'Result (1X2)', options: ['1 — Home Win', 'X — Draw', '2 — Away Win'] },
+  { group: 'Double Chance', options: ['1X — Home or Draw', 'X2 — Draw or Away', '12 — Home or Away'] },
+  { group: 'GG / NG', options: ['GG — Both Teams Score', 'NG — Clean Sheet'] },
+  { group: 'Over / Under 1.5', options: ['Over 1.5 Goals', 'Under 1.5 Goals'] },
+  { group: 'Over / Under 2.5', options: ['Over 2.5 Goals', 'Under 2.5 Goals'] },
+  { group: 'Over / Under 3.5', options: ['Over 3.5 Goals', 'Under 3.5 Goals'] },
+];
 
-function parseFixtures(raw) {
-  const lines = raw.trim().split("\n").filter(l => l.trim() !== "");
-  const fixtures = [];
-  for (let i = 0; i < lines.length; i += 8) {
-    fixtures.push({
-      home: lines[i],
-      away: lines[i + 1],
-      odds: {
-        "1": parseFloat(lines[i + 3]),
-        "X": parseFloat(lines[i + 5]),
-        "2": parseFloat(lines[i + 7])
+/* ══ CHECKER SOURCE STATE ══ */
+let checkerSource = 'stored'; // 'stored' | 'paste'
+
+function switchCheckerSource(src) {
+  checkerSource = src;
+  document.getElementById('srcTabStored').classList.toggle('active', src === 'stored');
+  document.getElementById('srcTabPaste').classList.toggle('active', src === 'paste');
+  document.getElementById('srcStoredInfo').style.display = src === 'stored' ? 'block' : 'none';
+  document.getElementById('srcPasteArea').style.display = src === 'paste' ? 'block' : 'none';
+}
+
+function updateCheckerPastePreview() {
+  const raw = document.getElementById('checkerPasteInput').value;
+  const area = document.getElementById('checkerPastePreview');
+  if (!raw.trim()) { area.innerHTML = ''; return; }
+  const parsed = parseSmartInput(raw);
+  if (!parsed.length) { area.innerHTML = ''; return; }
+  area.innerHTML = `<div style="font-family:var(--mono);font-size:0.65rem;color:var(--accent);padding:5px 0">✓ ${parsed.length} match${parsed.length!==1?'es':''} detected</div>`;
+}
+
+function getCheckerMatches() {
+  if (checkerSource === 'paste') {
+    const raw = document.getElementById('checkerPasteInput')?.value || '';
+    return parseSmartInput(raw);
+  }
+  return loadMatches();
+}
+
+/* ══ MODAL ══ */
+let _modalCallback = null;
+function openModal(title, msg, onConfirm) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  _modalCallback = onConfirm;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); _modalCallback = null; }
+document.getElementById('modalConfirmBtn').onclick = () => { if (_modalCallback) _modalCallback(); closeModal(); };
+document.getElementById('modalBg').addEventListener('click', e => { if (e.target === document.getElementById('modalBg')) closeModal(); });
+
+/* ══ DATA LAYER ══ */
+const SK = 'footyai_matches_v2';
+const EK = 'footyai_elo_v2';
+let eloRatings = safeJSON(localStorage.getItem(EK), {});
+let currentPrediction = null;
+function safeJSON(s, fb) { try { return JSON.parse(s) || fb; } catch(e) { return fb; } }
+function loadMatches() { return safeJSON(localStorage.getItem(SK), []); }
+function saveMatches(matches) {
+  const existing = loadMatches();
+  const key = m => `${m.homeTeam}|${m.homeScore}|${m.awayScore}|${m.awayTeam}`;
+  const existingSet = new Set(existing.map(key));
+  const fresh = matches.filter(m => !existingSet.has(key(m)));
+  localStorage.setItem(SK, JSON.stringify([...existing, ...fresh]));
+  updateEloRatings(fresh);
+  updateHeaderStats();
+  return fresh.length;
+}
+function saveAllMatches(matches) {
+  localStorage.setItem(SK, JSON.stringify(matches));
+  eloRatings = {};
+  updateEloRatings(matches);
+  updateHeaderStats();
+}
+function deleteMatch(index) { const all = loadMatches(); all.splice(index, 1); saveAllMatches(all); }
+function updateMatch(index, updated) { const all = loadMatches(); all[index] = { ...all[index], ...updated }; saveAllMatches(all); }
+function updateHeaderStats() {
+  const m = loadMatches();
+  const teams = new Set(m.flatMap(x => [x.homeTeam, x.awayTeam]));
+  document.getElementById('matchCount').textContent = m.length;
+  document.getElementById('teamCount').textContent = teams.size;
+  const sc = document.getElementById('storedMatchCount');
+  if (sc) sc.textContent = m.length;
+}
+
+/* ══ SMART PARSER ══ */
+function parseSmartInput(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const matches = []; let currentWeek = null; let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/week\s*\d+/i.test(line) || /league.*\d{4}/i.test(line) || /#\d{10,}/.test(line)) { currentWeek = line; i++; continue; }
+    if (/^\d{1,2}:\d{2}\s*(am|pm)?$/i.test(line)) { i++; continue; }
+    if (i + 2 < lines.length) {
+      const sc = lines[i + 1]; const nt = lines[i + 2];
+      if (/^\d{2}$/.test(sc) && line.length >= 2 && nt.length >= 2 && isNaN(line) && isNaN(nt)) {
+        matches.push({ homeTeam: line, homeScore: parseInt(sc[0]), awayScore: parseInt(sc[1]), awayTeam: nt, week: currentWeek, date: new Date().toISOString() });
+        i += 3; continue;
       }
-    });
-  }
-  return fixtures;
-}
-
-function parseResults(raw) {
-  const lines = raw.trim().split("\n").filter(l => l.trim() !== "");
-  const results = [];
-  for (let i = 0; i < lines.length; i += 4) {
-    results.push({
-      home: lines[i],
-      homeScore: parseInt(lines[i + 1]),
-      awayScore: parseInt(lines[i + 2]),
-      away: lines[i + 3]
-    });
-  }
-  return results;
-}
-
-function getCombinedTextareaValues(selector) {
-  return Array.from(document.querySelectorAll(selector))
-    .map(el => el.value.trim())
-    .filter(val => val !== "")
-    .join("\n");
-}
-
-function addFixtureField() {
-  const container = document.getElementById("fixtureFields");
-  const textarea = document.createElement("textarea");
-  textarea.className = "form-control mb-2 fixture-input";
-  textarea.placeholder = "Paste more fixtures...";
-  container.appendChild(textarea);
-}
-
-function addResultField() {
-  const container = document.getElementById("resultFields");
-  const textarea = document.createElement("textarea");
-  textarea.className = "form-control mb-2 result-input";
-  textarea.placeholder = "Paste more results...";
-  container.appendChild(textarea);
-}
-
-function analyzeAndSave() {
-  const fixtureText = getCombinedTextareaValues(".fixture-input");
-  const resultText = getCombinedTextareaValues(".result-input");
-
-  localStorage.setItem("fixtures", fixtureText);
-  localStorage.setItem("results", resultText);
-
-  const fixtures = parseFixtures(fixtureText);
-  const results = parseResults(resultText);
-
-  const storedMatchKeys = new Set(allMatches.map(m => `${m.home}-${m.away}-${m.result}`.toLowerCase()));
-  const newMatches = [];
-
-  fixtures.forEach(fix => {
-    const res = results.find(r =>
-      r.home.toLowerCase() === fix.home.toLowerCase() &&
-      r.away.toLowerCase() === fix.away.toLowerCase()
-    );
-
-    if (!res) return;
-
-    let outcome = '';
-    if (res.homeScore > res.awayScore) outcome = '1';
-    else if (res.homeScore < res.awayScore) outcome = '2';
-    else outcome = 'X';
-
-    const matchKey = `${fix.home}-${fix.away}-${res.homeScore}-${res.awayScore}`.toLowerCase();
-    if (!storedMatchKeys.has(matchKey)) {
-      const matchString = `🏟️ ${fix.home} vs ${fix.away}
-➡️ Result: ${res.homeScore} - ${res.awayScore}
-✅ Outcome: ${outcome}
-🔢 Odds: 1 @ ${fix.odds["1"]}, X @ ${fix.odds["X"]}, 2 @ ${fix.odds["2"]}
------------------------------`;
-
-      const matchData = {
-        home: fix.home,
-        away: fix.away,
-        outcome,
-        result: `${res.homeScore}-${res.awayScore}`,
-        odds: fix.odds,
-        raw: matchString,
-        timestamp: Date.now()
-      };
-
-      allMatches.push(matchData);
-      newMatches.push(matchData);
     }
-  });
-
-  localStorage.setItem("allMatches", JSON.stringify(allMatches));
-  document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n") || "No analysis yet.";
-  document.getElementById("matchCount").textContent = allMatches.length;
-
-  const newlyAddedNote = document.getElementById("newlyAddedNote");
-  if (newMatches.length > 0) {
-    newlyAddedNote.textContent = `✅ Added ${newMatches.length} new match${newMatches.length > 1 ? "es" : ""}`;
-    setTimeout(() => newlyAddedNote.textContent = "", 5000);
-  } else {
-    newlyAddedNote.textContent = "⚠️ No new matches found";
-    setTimeout(() => newlyAddedNote.textContent = "", 5000);
+    if (i + 3 < lines.length) {
+      const h = parseInt(lines[i + 1]); const a = parseInt(lines[i + 2]); const tb = lines[i + 3];
+      if (!isNaN(h) && !isNaN(a) && lines[i+1].trim() === String(h) && lines[i+2].trim() === String(a) && isNaN(line) && isNaN(tb) && tb.length >= 2 && line.length >= 2) {
+        matches.push({ homeTeam: line, homeScore: h, awayScore: a, awayTeam: tb, week: currentWeek, date: new Date().toISOString() });
+        i += 4; continue;
+      }
+    }
+    i++;
   }
+  return matches;
+}
+function liveParsePreview() {
+  const raw = document.getElementById('resultsInput').value;
+  const area = document.getElementById('parsePreviewArea');
+  if (!raw.trim()) { area.innerHTML = ''; return; }
+  const parsed = parseSmartInput(raw);
+  if (!parsed.length) { area.innerHTML = ''; return; }
+  const weeks = {};
+  parsed.forEach(m => { const w = m.week || 'Ungrouped'; if (!weeks[w]) weeks[w] = []; weeks[w].push(m); });
+  let html = `<div class="parse-prev"><div class="parse-prev-hd"><span>Detected ${parsed.length} match${parsed.length !== 1 ? 'es' : ''}</span><span style="color:var(--accent)">✓ Ready</span></div>`;
+  Object.entries(weeks).forEach(([week, ms]) => {
+    if (week !== 'Ungrouped') html += `<div class="parse-week">${week}</div>`;
+    ms.forEach(m => { html += `<div class="parse-match-row"><div class="parse-team">${m.homeTeam}</div><div class="parse-score">${m.homeScore}-${m.awayScore}</div><div class="parse-team away">${m.awayTeam}</div></div>`; });
+  });
+  html += '</div>'; area.innerHTML = html;
+}
+function addToStorage() {
+  const input = document.getElementById('resultsInput').value;
+  if (!input.trim()) { toast('Enter match data first'); return; }
+  const parsed = parseSmartInput(input);
+  if (!parsed.length) { toast('No valid matches found — check format'); return; }
+  const added = saveMatches(parsed);
+  document.getElementById('resultsInput').value = '';
+  document.getElementById('parsePreviewArea').innerHTML = '';
+  loadTeamSelects();
+  toast(`✓ Added ${added} new match${added !== 1 ? 'es' : ''} (${parsed.length - added} duplicates skipped)`);
+}
+function uploadData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('Expected array');
+      const added = saveMatches(data); loadTeamSelects(); toast(`✓ Uploaded ${added} matches`);
+    } catch(err) { toast('Invalid file: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+function downloadData() {
+  const data = localStorage.getItem(SK) || '[]';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `footyai_data_${new Date().toISOString().split('T')[0]}.json`; a.click();
+  URL.revokeObjectURL(url); toast('↓ Download started');
+}
+function confirmClearAll() {
+  openModal('Clear All Data', 'This will permanently delete all match records, ELO ratings and analysis. This cannot be undone.', () => {
+    localStorage.removeItem(SK); localStorage.removeItem(EK);
+    eloRatings = {}; loadTeamSelects(); updateHeaderStats();
+    ['predOutput','safeMatchesOutput','teamIntelOutput','comparisonResult','dataTabContent'].forEach(id => {
+      const icons = {predOutput:'✦',safeMatchesOutput:'⊙',teamIntelOutput:'⊛',comparisonResult:'↔',dataTabContent:'⊞'};
+      document.getElementById(id).innerHTML = `<div class="empty"><span class="empty-ico">${icons[id]}</span>No data</div>`;
+    });
+    document.getElementById('parsePreviewArea').innerHTML = '';
+    toast('All data cleared');
+  });
 }
 
-function copyOutput() {
-  const text = document.getElementById("output").textContent.trim();
-  const matchCount = (text.match(/🏟️/g) || []).length;
+/* ══ DATA TAB ══ */
+let dataSearch = '', dataWeekFilter = '';
+function loadDataTab() {
+  const matches = loadMatches(); const out = document.getElementById('dataTabContent');
+  if (!matches.length) { out.innerHTML = '<div class="empty"><span class="empty-ico">⊞</span>No matches stored yet — add some via Data Input</div>'; return; }
+  const weeks = [...new Set(matches.map(m => m.week || 'Untagged').filter(Boolean))].sort();
+  const teams = [...new Set(matches.flatMap(m => [m.homeTeam, m.awayTeam]))].sort();
+  const totalGoals = matches.reduce((s, m) => s + m.homeScore + m.awayScore, 0);
+  const avgGoals = (totalGoals / matches.length).toFixed(2);
+  const filtered = matches.filter(m => {
+    const search = dataSearch.toLowerCase();
+    const matchSearch = !search || m.homeTeam.toLowerCase().includes(search) || m.awayTeam.toLowerCase().includes(search);
+    const matchWeek = !dataWeekFilter || (m.week || 'Untagged') === dataWeekFilter;
+    return matchSearch && matchWeek;
+  });
+  out.innerHTML = `
+    <div class="data-stats-strip">
+      <div class="ds-chip"><strong>${matches.length}</strong>Total Matches</div>
+      <div class="ds-chip"><strong>${teams.length}</strong>Teams</div>
+      <div class="ds-chip"><strong>${weeks.length}</strong>Weeks</div>
+      <div class="ds-chip"><strong>${avgGoals}</strong>Avg Goals/Match</div>
+      <div class="ds-chip"><strong>${totalGoals}</strong>Total Goals</div>
+    </div>
+    <div class="data-filters">
+      <input type="text" class="search-input" placeholder="Search teams…" value="${dataSearch}" oninput="dataSearch=this.value;loadDataTab()">
+      <select style="width:auto;padding:8px 12px" onchange="dataWeekFilter=this.value;loadDataTab()">
+        <option value="">All weeks</option>
+        ${weeks.map(w => `<option value="${w}"${w===dataWeekFilter?' selected':''}>${w}</option>`).join('')}
+      </select>
+      <span style="font-family:var(--mono);font-size:0.68rem;color:var(--txt-3)">${filtered.length} of ${matches.length} shown</span>
+    </div>
+    <div class="card"><div class="scroll-area" id="matchList">${renderMatchList(matches, filtered)}</div></div>
+  `;
+}
+function renderMatchList(allMatches, filtered) {
+  if (!filtered.length) return '<div class="empty" style="padding:24px"><span class="empty-ico">⊘</span>No matches match your filter</div>';
+  return filtered.map(m => {
+    const realIdx = allMatches.indexOf(m);
+    return `<div class="match-entry" id="me-${realIdx}">
+      <div class="me-team">${m.homeTeam}</div>
+      <div class="me-score">${m.homeScore}-${m.awayScore}</div>
+      <div class="me-team away">${m.awayTeam}</div>
+      <div class="me-week" title="${m.week || ''}">${m.week ? m.week.replace(/.*WEEK\s*/i,'Wk').substring(0,10) : '—'}</div>
+      <div class="me-actions">
+        <button class="btn btn-sm" onclick="startEdit(${realIdx})" title="Edit">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDeleteMatch(${realIdx})" title="Delete">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function confirmDeleteMatch(idx) {
+  const m = loadMatches()[idx];
+  if (!m) { toast('Match not found'); return; }
+  openModal('Delete Match', `Delete ${m.homeTeam} ${m.homeScore}-${m.awayScore} ${m.awayTeam}?`, () => { deleteMatch(idx); loadTeamSelects(); loadDataTab(); toast('Match deleted'); });
+}
+let editingIdx = null;
+function startEdit(idx) {
+  if (editingIdx !== null) cancelEdit();
+  editingIdx = idx;
+  const m = loadMatches()[idx]; if (!m) return;
+  const row = document.getElementById(`me-${idx}`); if (!row) return;
+  row.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form'; form.id = `edit-${idx}`;
+  form.innerHTML = `
+    <input type="text" id="ef-ht" value="${escHtml(m.homeTeam)}" placeholder="Home team" style="grid-column:span 1">
+    <input type="text" id="ef-hs" value="${m.homeScore}" placeholder="H" style="width:60px;text-align:center">
+    <span style="font-family:var(--mono);color:var(--txt-3);font-size:0.9rem;align-self:center">—</span>
+    <input type="text" id="ef-as" value="${m.awayScore}" placeholder="A" style="width:60px;text-align:center">
+    <input type="text" id="ef-at" value="${escHtml(m.awayTeam)}" placeholder="Away team">
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-primary btn-sm" onclick="saveEdit(${idx})">Save</button>
+      <button class="btn btn-sm" onclick="cancelEdit()">Cancel</button>
+    </div>`;
+  row.parentNode.insertBefore(form, row.nextSibling);
+  document.getElementById('ef-ht').focus();
+}
+function saveEdit(idx) {
+  const ht = document.getElementById('ef-ht')?.value.trim();
+  const hs = parseInt(document.getElementById('ef-hs')?.value);
+  const as_ = parseInt(document.getElementById('ef-as')?.value);
+  const at = document.getElementById('ef-at')?.value.trim();
+  if (!ht || !at || isNaN(hs) || isNaN(as_) || hs < 0 || as_ < 0) { toast('Invalid data — check all fields'); return; }
+  updateMatch(idx, { homeTeam: ht, homeScore: hs, awayScore: as_, awayTeam: at });
+  editingIdx = null; loadTeamSelects(); loadDataTab(); toast('Match updated');
+}
+function cancelEdit() {
+  if (editingIdx !== null) {
+    const form = document.getElementById(`edit-${editingIdx}`);
+    const row = document.getElementById(`me-${editingIdx}`);
+    if (form) form.remove(); if (row) row.style.display = ''; editingIdx = null;
+  }
+}
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  if (text === "" || matchCount === 0) {
-    alert("⚠️ No match data to copy.");
+/* ══ ELO ══ */
+function updateEloRatings(matches) {
+  const K = 32;
+  matches.forEach(({ homeTeam, awayTeam, homeScore, awayScore }) => {
+    if (!eloRatings[homeTeam]) eloRatings[homeTeam] = 1500;
+    if (!eloRatings[awayTeam]) eloRatings[awayTeam] = 1500;
+    const exp = 1 / (1 + Math.pow(10, (eloRatings[awayTeam] - eloRatings[homeTeam]) / 400));
+    const act = homeScore > awayScore ? 1 : homeScore === awayScore ? 0.5 : 0;
+    eloRatings[homeTeam] += K * (act - exp);
+    eloRatings[awayTeam] += K * ((1 - act) - (1 - exp));
+  });
+  localStorage.setItem(EK, JSON.stringify(eloRatings));
+}
+
+/* ══ RESULTS CHECKER ══
+   KEY DESIGN:
+   1. Tips are fetched from server (source of truth — not localStorage)
+   2. Only tips WITHOUT a result are graded (already-graded ones shown as-is)
+   3. Match data comes from user's chosen source (stored OR pasted)
+   4. Clearing localStorage only affects prediction features, never grading
+════════════════════════════════════════════════════════════ */
+function normTeam(s) { return (s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+
+function checkTipResult(tip, matchResults) {
+  const match = matchResults.find(m => {
+    const hm = normTeam(m.homeTeam) === normTeam(tip.homeTeam) && normTeam(m.awayTeam) === normTeam(tip.awayTeam);
+    const fm = normTeam(m.homeTeam) === normTeam(tip.awayTeam) && normTeam(m.awayTeam) === normTeam(tip.homeTeam);
+    return hm || fm;
+  });
+  if (!match) return { result: null, score: null };
+  const isFlipped = normTeam(match.homeTeam) === normTeam(tip.awayTeam);
+  const h = isFlipped ? match.awayScore : match.homeScore;
+  const a = isFlipped ? match.homeScore : match.awayScore;
+  const total = h + a;
+  const score = `${match.homeScore}-${match.awayScore}`;
+  const t = tip.tip || '';
+  let result = null;
+  if      (t.startsWith('1 —'))        result = h > a ? 'win' : 'loss';
+  else if (t.startsWith('X —'))        result = h === a ? 'win' : 'loss';
+  else if (t.startsWith('2 —'))        result = a > h ? 'win' : 'loss';
+  else if (t.startsWith('1X —'))       result = h >= a ? 'win' : 'loss';
+  else if (t.startsWith('X2 —'))       result = a >= h ? 'win' : 'loss';
+  else if (t.startsWith('12 —'))       result = h !== a ? 'win' : 'loss';
+  else if (t.startsWith('GG —'))       result = h > 0 && a > 0 ? 'win' : 'loss';
+  else if (t.startsWith('NG —'))       result = h === 0 || a === 0 ? 'win' : 'loss';
+  else if (t.startsWith('Over 1.5'))   result = total > 1.5 ? 'win' : 'loss';
+  else if (t.startsWith('Under 1.5'))  result = total < 1.5 ? 'win' : 'loss';
+  else if (t.startsWith('Over 2.5'))   result = total > 2.5 ? 'win' : 'loss';
+  else if (t.startsWith('Under 2.5'))  result = total < 2.5 ? 'win' : 'loss';
+  else if (t.startsWith('Over 3.5'))   result = total > 3.5 ? 'win' : 'loss';
+  else if (t.startsWith('Under 3.5'))  result = total < 3.5 ? 'win' : 'loss';
+  return { result, score };
+}
+
+async function saveResultToServer(dateKey, tipId, result, score) {
+  const res = await fetch(`${SERVER_URL}/api/tips/${dateKey}/${tipId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ result, score, actualScore: score }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Server error');
+  return data;
+}
+
+async function runResultsCheck() {
+  const out = document.getElementById('checkerOutput');
+  const dateKey = document.getElementById('checkerDateFilter')?.value || new Date().toISOString().split('T')[0];
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>Loading posted tips from server…</div>';
+
+  /* 1 — Fetch ALL tips for the date from server */
+  let tips = [];
+  try {
+    const res = await fetch(`${SERVER_URL}/api/tips/public?date=${dateKey}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    tips = data.tips || [];
+  } catch (err) {
+    out.innerHTML = `<div class="empty"><span class="empty-ico">⚠</span>Could not load tips: ${err.message}</div>`;
+    return;
+  }
+  if (!tips.length) {
+    out.innerHTML = `<div class="empty"><span class="empty-ico">📭</span>No tips posted for ${dateKey}</div>`;
     return;
   }
 
-  navigator.clipboard.writeText(text).then(() => {
-    alert(`✅ Copied ${matchCount} match${matchCount > 1 ? "es" : ""} to clipboard.`);
-  }).catch(() => {
-    alert("❌ Failed to copy text.");
+  /* 2 — Separate already-graded from ungraded — never re-grade existing results */
+  const alreadyGraded = tips.filter(t => t.result && t.result !== 'pending' && t.result !== '');
+  const toGrade = tips.filter(t => !t.result || t.result === 'pending' || t.result === '');
+
+  /* 3 — Get match data from user's chosen source */
+  const matchData = getCheckerMatches();
+
+  /* 4 — Grade only the ungraded ones */
+  const gradeResults = toGrade.map(tip => {
+    const { result, score } = checkTipResult(tip, matchData);
+    return { ...tip, result, actualScore: score };
+  });
+
+  /* 5 — Combine: already graded + freshly graded */
+  const allResults = [
+    ...alreadyGraded.map(t => ({ ...t, _wasAlreadyGraded: true })),
+    ...gradeResults,
+  ];
+
+  const newlyGraded = gradeResults.filter(r => r.result !== null);
+  const wins    = allResults.filter(r => r.result === 'win').length;
+  const losses  = allResults.filter(r => r.result === 'loss').length;
+  const pending = allResults.filter(r => !r.result || r.result === 'pending' || r.result === '').length;
+  const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+  const rateColor = winRate >= 60 ? 'g' : winRate >= 40 ? 'a' : 'r';
+
+  const sourceNote = checkerSource === 'paste'
+    ? `<span style="color:var(--info);font-family:var(--mono);font-size:0.65rem">Source: pasted results (${matchData.length} matches)</span>`
+    : `<span style="color:var(--txt-3);font-family:var(--mono);font-size:0.65rem">Source: stored data (${matchData.length} matches)</span>`;
+
+  out.innerHTML = `
+    <div class="checker-panel">
+      <div class="checker-title">Results for ${dateKey}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div class="checker-stat"><b class="g">${wins}</b>Wins</div>
+        <div class="checker-stat"><b class="r">${losses}</b>Losses</div>
+        <div class="checker-stat"><b class="a">${pending}</b>Pending</div>
+        <div class="checker-stat"><b class="${rateColor}">${winRate}%</b>Hit Rate</div>
+        <div class="checker-stat"><b class="a" id="savedCount">0</b>Saved now</div>
+      </div>
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        ${sourceNote}
+        ${alreadyGraded.length ? `<span style="font-family:var(--mono);font-size:0.65rem;color:var(--accent)">✓ ${alreadyGraded.length} already graded (skipped)</span>` : ''}
+        ${toGrade.length ? `<span style="font-family:var(--mono);font-size:0.65rem;color:var(--gold)">⚡ ${toGrade.length} new tip${toGrade.length!==1?'s':''} to grade</span>` : ''}
+      </div>
+      ${newlyGraded.length > 0 ? `
+        <div class="save-progress" id="saveProgressBox">
+          <span id="saveProgressText">Saving ${newlyGraded.length} new result${newlyGraded.length !== 1 ? 's' : ''} to server…</span>
+          <div class="sp-bar-wrap"><div class="sp-bar" id="spBar" style="width:0%"></div></div>
+        </div>` : ''}
+      ${pending > 0 && toGrade.length > 0 ? `
+        <div style="font-family:var(--mono);font-size:0.72rem;color:var(--gold);margin-bottom:14px;padding:8px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.18);border-radius:var(--radius)">
+          ⏳ ${pending} tip${pending!==1?'s':''} still pending — ${checkerSource==='paste'?'add those results to the paste area above':'add those match results via Data Input or switch to Paste mode'} to resolve them
+        </div>` : ''}
+      <div id="resultsRows">
+        ${allResults.map(r => {
+          /* Already-graded tips: show as read-only rows */
+          if (r._wasAlreadyGraded) {
+            const bc = r.result === 'win' ? 'win' : r.result === 'loss' ? 'loss' : 'pend';
+            const bt = r.result === 'win' ? '✓ Win' : r.result === 'loss' ? '✕ Loss' : '⏳ Pending';
+            return `<div class="tip-res-row" style="opacity:0.65">
+              <div>
+                <div class="tip-res-match">
+                  ${r.kickoff ? `<span class="time-badge" style="margin-right:8px;font-size:0.8rem">${r.kickoff}</span>` : ''}
+                  ${r.matchLabel || (r.homeTeam + ' vs ' + r.awayTeam)}
+                  <span class="already-badge">already graded</span>
+                </div>
+                <div class="tip-res-mkt">${r.tip || '—'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                ${r.actualScore || r.score ? `<div class="tip-score">${r.actualScore || r.score}</div>` : ''}
+                <span class="res-badge ${bc}">${bt}</span>
+              </div>
+            </div>`;
+          }
+          /* Freshly graded tips */
+          const bc = r.result === 'win' ? 'win' : r.result === 'loss' ? 'loss' : 'pend';
+          const bt = r.result === 'win' ? '✓ Win' : r.result === 'loss' ? '✕ Loss' : '⏳ Pending';
+          return `<div class="tip-res-row" id="row-${r.id}">
+            <div>
+              <div class="tip-res-match">${r.kickoff ? `<span class="time-badge" style="margin-right:8px;font-size:0.8rem">${r.kickoff}</span>` : ''}${r.matchLabel || (r.homeTeam + ' vs ' + r.awayTeam)}</div>
+              <div class="tip-res-mkt">${r.tip || '—'}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              ${r.actualScore ? `<div class="tip-score">${r.actualScore}</div>` : ''}
+              <span class="res-badge ${bc}" id="badge-${r.id}">${bt}</span>
+              <span id="sync-${r.id}" style="font-family:var(--mono);font-size:0.6rem;color:var(--txt-3)"></span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  /* 6 — Save only newly graded tips that got a result */
+  if (newlyGraded.length === 0) return;
+
+  let savedCount = 0, failCount = 0;
+  for (let i = 0; i < newlyGraded.length; i++) {
+    const r = newlyGraded[i];
+    const tipId = r.id || r._id || r.tipId;
+    const syncEl = document.getElementById(`sync-${r.id}`);
+    if (syncEl) syncEl.textContent = '↑ saving…';
+    try {
+      if (!tipId) throw new Error('No tip ID');
+      await saveResultToServer(dateKey, tipId, r.result, r.actualScore || '');
+      savedCount++;
+      if (syncEl) { syncEl.textContent = '✓ saved'; syncEl.style.color = 'var(--accent)'; }
+    } catch (err) {
+      failCount++;
+      if (syncEl) { syncEl.textContent = '✗ failed'; syncEl.style.color = 'var(--danger)'; }
+      console.warn('[Checker] Save failed for', r.matchLabel || r.id, err.message);
+    }
+    const pct = Math.round(((i + 1) / newlyGraded.length) * 100);
+    const spBar = document.getElementById('spBar');
+    if (spBar) spBar.style.width = pct + '%';
+    const scEl = document.getElementById('savedCount');
+    if (scEl) scEl.textContent = savedCount;
+  }
+
+  const spBox = document.getElementById('saveProgressBox');
+  if (spBox) {
+    if (failCount === 0) {
+      spBox.style.background = 'rgba(74,222,128,0.06)';
+      spBox.style.borderColor = 'rgba(74,222,128,0.25)';
+      document.getElementById('saveProgressText').textContent =
+        `✓ All ${savedCount} new result${savedCount!==1?'s':''} saved — public page will update on next refresh`;
+      document.getElementById('spBar').style.background = 'var(--accent)';
+    } else {
+      spBox.style.background = 'rgba(248,113,113,0.06)';
+      spBox.style.borderColor = 'rgba(248,113,113,0.2)';
+      document.getElementById('saveProgressText').innerHTML =
+        `<span style="color:var(--accent)">✓ ${savedCount} saved</span>&nbsp;&nbsp;<span style="color:var(--danger)">✗ ${failCount} failed — check server logs</span>`;
+    }
+  }
+  toast(`✓ ${savedCount} result${savedCount!==1?'s':''} saved to server`);
+}
+
+/* ══ FINGERPRINT ══ */
+function buildFingerprintTable(matches) {
+  const freq = {}; let total = 0;
+  matches.forEach(m => { const key = `${m.homeScore}-${m.awayScore}`; freq[key] = (freq[key] || 0) + 1; total++; });
+  if (!total) return { freq, bias: {}, total };
+  const avgHome = matches.reduce((s,m) => s + m.homeScore, 0) / total;
+  const avgAway = matches.reduce((s,m) => s + m.awayScore, 0) / total;
+  const bias = {};
+  Object.entries(freq).forEach(([score, count]) => {
+    const [h, a] = score.split('-').map(Number);
+    const pp = poisson(avgHome, h) * poisson(avgAway, a);
+    const obs = count / total;
+    bias[score] = { count, observed: obs, poissonProb: pp, ratio: pp > 0 ? obs / pp : 1 };
+  });
+  return { freq, bias, total, avgHome, avgAway };
+}
+function getBiasMultiplier(score, fp) {
+  if (!fp || !fp.bias[score]) return 1;
+  return Math.max(0.5, Math.min(2.0, fp.bias[score].ratio));
+}
+
+/* ══ MARKOV ══ */
+function buildMarkovChain(team, matches) {
+  const games = matches.filter(m => m.homeTeam === team || m.awayTeam === team);
+  const results = games.map(m => { const s = m.homeTeam===team ? m.homeScore : m.awayScore; const c = m.homeTeam===team ? m.awayScore : m.homeScore; return s>c?'W':s<c?'L':'D'; });
+  const states = ['W','D','L']; const counts = {};
+  states.forEach(f => { counts[f] = { W:0, D:0, L:0, total:0 }; });
+  for (let i = 0; i < results.length - 1; i++) { counts[results[i]][results[i+1]]++; counts[results[i]].total++; }
+  const chain = {};
+  states.forEach(f => { chain[f] = {}; states.forEach(t => { chain[f][t] = counts[f].total > 0 ? counts[f][t] / counts[f].total : 1/3; }); });
+  return { chain, lastResult: results[results.length - 1] || 'D', results };
+}
+function markovAdjust(bW, bD, bL, mk1, mk2) {
+  const m1W = mk1.chain[mk1.lastResult]?.W ?? bW/100; const m1D = mk1.chain[mk1.lastResult]?.D ?? bD/100;
+  const m2W = mk2.chain[mk2.lastResult]?.W ?? bW/100; const m2D = mk2.chain[mk2.lastResult]?.D ?? bD/100;
+  const bH = 0.60*(bW/100) + 0.20*m1W + 0.20*(1-m2W);
+  const bDr = 0.60*(bD/100) + 0.20*m1D + 0.20*m2D;
+  let bA = Math.max(0, 1 - bH - bDr); const sum = bH + bDr + bA;
+  return { home: Math.round(bH/sum*100), draw: Math.round(bDr/sum*100), away: Math.round(bA/sum*100) };
+}
+
+/* ══ DECAY / LAMBDA ══ */
+function decayWeightedAvgScore(team, matches) {
+  const games = [...matches.filter(m => m.homeTeam===team || m.awayTeam===team)].reverse();
+  if (!games.length) return { scored: 0, conceded: 0, totalWeight: 0 };
+  let sW=0, cW=0, tW=0;
+  games.forEach((m, i) => { const w=Math.pow(DECAY_FACTOR,i); const sc=m.homeTeam===team?m.homeScore:m.awayScore; const cc=m.homeTeam===team?m.awayScore:m.homeScore; sW+=sc*w; cW+=cc*w; tW+=w; });
+  return { scored: tW>0?sW/tW:0, conceded: tW>0?cW/tW:0, totalWeight: tW };
+}
+function rollingLambda(team, matches, window=LAMBDA_WINDOW) {
+  const games = [...matches.filter(m => m.homeTeam===team || m.awayTeam===team)].reverse().slice(0, window);
+  if (!games.length) return { scored:0, conceded:0 };
+  return {
+    scored: games.reduce((s,m)=>s+(m.homeTeam===team?m.homeScore:m.awayScore),0)/games.length,
+    conceded: games.reduce((s,m)=>s+(m.homeTeam===team?m.awayScore:m.homeScore),0)/games.length
+  };
+}
+
+/* ══ CONFIDENCE ══ */
+function computeConfidenceScore(t1s, t2s, mk1, mk2, fp) {
+  let score = 0; const reasons = [];
+  const min = Math.min(t1s.total, t2s.total);
+  if (min >= MIN_SAMPLE) { score += 25; reasons.push(`✓ Sample gate (${min} games)`); } else reasons.push(`⚠ Low sample: ${min} games`);
+  const mc = (Math.max(...Object.values(mk1.chain[mk1.lastResult]||{})) + Math.max(...Object.values(mk2.chain[mk2.lastResult]||{}))) / 2;
+  score += Math.round(mc * 25); reasons.push(`Markov signal: ${(mc*100).toFixed(0)}%`);
+  score += Math.min(25, Math.round((fp.total/100)*25)); reasons.push(`RNG data: ${fp.total} matches`);
+  const sp = (t1s.shockGap<=1 || t2s.shockGap<=1) ? -10 : 0;
+  score += 25 + sp; if (sp < 0) reasons.push('⚠ Recent shock'); else reasons.push('✓ No shock');
+  return { score: Math.max(0, Math.min(100, score)), reasons };
+}
+
+/* ══ TEAM ANALYSIS ══ */
+function analyzeTeam(team, matches) {
+  const all = matches.filter(m => m.homeTeam===team || m.awayTeam===team);
+  const home = all.filter(m => m.homeTeam===team); const away = all.filter(m => m.awayTeam===team);
+  const recent = all.slice(-6);
+  const calcWDL = (games, isHome) => { let W=0,D=0,L=0,gs=0,gc=0; games.forEach(m=>{const s=isHome?m.homeScore:m.awayScore;const c=isHome?m.awayScore:m.homeScore;gs+=s;gc+=c;if(s>c)W++;else if(s<c)L++;else D++;}); return {W,D,L,gs,gc}; };
+  const homeStats = calcWDL(home, true); const awayStats = calcWDL(away, false);
+  let bts=0,o15=0,o25=0,o35=0;
+  recent.forEach(m => { const tot=m.homeScore+m.awayScore; if(m.homeScore>0&&m.awayScore>0)bts++; if(tot>1.5)o15++; if(tot>2.5)o25++; if(tot>3.5)o35++; });
+  const total = all.length || 1;
+  const avgScore = (all.reduce((s,m)=>s+(m.homeTeam===team?m.homeScore:m.awayScore),0)/total).toFixed(2);
+  const avgConcede = (all.reduce((s,m)=>s+(m.homeTeam===team?m.awayScore:m.homeScore),0)/total).toFixed(2);
+  const formSeq = all.slice(-10).map(m=>{const s=m.homeTeam===team?m.homeScore:m.awayScore;const c=m.homeTeam===team?m.awayScore:m.homeScore;return s>c?'W':s<c?'L':'D';});
+  const cs = all.filter(m=>(m.homeTeam===team?m.awayScore:m.homeScore)===0).length;
+  const gd = (all.reduce((s,m)=>s+(m.homeTeam===team?m.homeScore-m.awayScore:m.awayScore-m.homeScore),0)/total).toFixed(2);
+  const shockGap = lastShockIndex(team, matches);
+  return { all, home, away, recent, homeStats, awayStats, bts, o15, o25, o35, avgScore, avgConcede, formSeq, cs, gd, shockGap, total };
+}
+function isShocking(m) { return m.homeScore+m.awayScore>=5 || Math.abs(m.homeScore-m.awayScore)>=3; }
+function lastShockIndex(team, matches) {
+  const games = [...matches.filter(m=>m.homeTeam===team||m.awayTeam===team)].reverse();
+  for(let i=0;i<games.length;i++) if(isShocking(games[i])) return i;
+  return games.length;
+}
+function estimateXG(team, matches) {
+  const r = matches.filter(m=>m.homeTeam===team||m.awayTeam===team).slice(-5);
+  if(!r.length) return '0.00';
+  return (r.reduce((s,m)=>s+(m.homeTeam===team?m.homeScore:m.awayScore),0)/r.length).toFixed(2);
+}
+
+/* ══ POISSON ══ */
+function factorial(n) { return n<=1?1:n*factorial(n-1); }
+function poisson(lambda, k) { return (Math.exp(-lambda)*Math.pow(lambda,k))/factorial(k); }
+function predictScorelineEnhanced(t1s, t2s, shock, fp, d1, d2, l1, l2) {
+  const la = ((l1.scored+d1.scored)/2 + parseFloat(t2s.avgConcede))/2;
+  const lb = ((l2.scored+d2.scored)/2 + parseFloat(t1s.avgConcede))/2;
+  const probs = {};
+  for(let i=0;i<=5;i++) for(let j=0;j<=5;j++) {
+    const key = `${i}-${j}`; let p = poisson(Math.max(0.1,la),i) * poisson(Math.max(0.1,lb),j);
+    p *= getBiasMultiplier(key, fp); probs[key] = (probs[key]||0) + p;
+  }
+  if(shock) ['4-2','3-3','5-1','1-5','2-4','1-4'].forEach(s=>{probs[s]=(probs[s]||0)+0.04+Math.random()*0.02;});
+  const total = Object.values(probs).reduce((s,p)=>s+p,0);
+  Object.keys(probs).forEach(k=>probs[k]/=total);
+  return Object.entries(probs).sort((a,b)=>b[1]-a[1]).slice(0,6);
+}
+
+/* ══ TEAM SELECTS ══ */
+function loadTeamSelects() {
+  const teams = Array.from(new Set(loadMatches().flatMap(m=>[m.homeTeam,m.awayTeam]))).sort();
+  ['team1','team2','teamA','teamB'].forEach(id => {
+    const sel = document.getElementById(id); const curr = sel.value;
+    const ph = {team1:'— Select Home Team —',team2:'— Select Away Team —',teamA:'— Select Team A —',teamB:'— Select Team B —'}[id];
+    sel.innerHTML = `<option value="">${ph}</option>` + teams.map(t=>`<option value="${t}"${t===curr?' selected':''}>${t}</option>`).join('');
   });
 }
 
-function copyNewMatches() {
-  const lastCopiedTimestamp = parseInt(localStorage.getItem("lastCopied") || "0");
+/* ══ MARKDOWN RENDERER ══ */
+function renderMarkdown(text) {
+  if (!text) return '';
+  const lines = text.split('\n'); const out = []; let inList = false, listType = null;
+  function closeList() { if (inList) { out.push('</' + listType + '>'); inList=false; listType=null; } }
+  lines.forEach(line => {
+    if (/^#{1,3} (.+)/.test(line)) { closeList(); out.push('<h3>' + inlineMD(line.replace(/^#{1,3} /, '')) + '</h3>'); return; }
+    if (/^\d+\.\s+(.+)/.test(line)) {
+      const content = line.replace(/^\d+\.\s+/, '');
+      if (!inList || listType !== 'ol') { closeList(); out.push('<ol style="margin:8px 0 8px 18px;line-height:1.9">'); inList=true; listType='ol'; }
+      out.push('<li>' + inlineMD(content) + '</li>'); return;
+    }
+    if (/^[-*\u2022]\s+(.+)/.test(line)) {
+      const content = line.replace(/^[-*\u2022]\s+/, '');
+      if (!inList || listType !== 'ul') { closeList(); out.push('<ul style="margin:8px 0 8px 18px;line-height:1.9">'); inList=true; listType='ul'; }
+      out.push('<li>' + inlineMD(content) + '</li>'); return;
+    }
+    if (!line.trim()) { closeList(); out.push('<br>'); return; }
+    closeList(); out.push('<p style="margin:4px 0">' + inlineMD(line) + '</p>');
+  });
+  closeList(); return out.join('');
+}
+function inlineMD(text) {
+  return text
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--gold)">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em style="color:var(--txt-2);font-style:normal;font-size:0.82rem">$1</em>')
+    .replace(/`(.+?)`/g, '<code style="font-family:var(--mono);background:var(--panel);padding:1px 5px;border-radius:3px;font-size:0.85em">$1</code>');
+}
 
-  const newMatches = allMatches.filter(m => m.timestamp && m.timestamp > lastCopiedTimestamp);
-
-  if (newMatches.length === 0) {
-    alert("✅ No new matches to copy.");
+/* ══ AI PREDICTION ══ */
+async function runAIPrediction() {
+  const t1 = document.getElementById('team1').value; const t2 = document.getElementById('team2').value;
+  const out = document.getElementById('predOutput');
+  if (!t1 || !t2 || t1===t2) { out.innerHTML='<div class="empty"><span class="empty-ico">⚠</span>Please select two different teams</div>'; return; }
+  currentPrediction = null;
+  const matches = loadMatches(); const t1s = analyzeTeam(t1, matches); const t2s = analyzeTeam(t2, matches);
+  const minG = Math.min(t1s.total, t2s.total);
+  if (minG < MIN_SAMPLE) {
+    out.innerHTML = `<div class="gate-warn"><div class="gate-ico">⛔</div><div><div style="font-weight:500;margin-bottom:3px">Sample gate — prediction locked</div><div>${t1s.total<MIN_SAMPLE?t1:t2} has only ${minG} game${minG!==1?'s':''} in the dataset. Need at least ${MIN_SAMPLE} per team.</div><div style="margin-top:6px;font-size:0.7rem;color:var(--txt-3)">Add more results via the Data Input tab to unlock this prediction.</div></div></div>`;
     return;
   }
+  if (!eloRatings[t1]) eloRatings[t1] = 1500; if (!eloRatings[t2]) eloRatings[t2] = 1500;
+  const fp = buildFingerprintTable(matches); const mk1 = buildMarkovChain(t1, matches); const mk2 = buildMarkovChain(t2, matches);
+  const d1 = decayWeightedAvgScore(t1, matches); const d2 = decayWeightedAvgScore(t2, matches);
+  const l1 = rollingLambda(t1, matches); const l2 = rollingLambda(t2, matches);
+  const eloDiff = eloRatings[t1] - eloRatings[t2]; const eloWP = 1 / (1 + Math.pow(10, -eloDiff/400));
+  const h2h = matches.filter(m=>[m.homeTeam,m.awayTeam].includes(t1)&&[m.homeTeam,m.awayTeam].includes(t2)).slice(-8);
+  const hD = h2h.filter(m=>m.homeScore===m.awayScore).length;
+  const rawD = Math.max(5, Math.min(40, Math.round((hD/Math.max(h2h.length,1))*100+15)));
+  const rawH = Math.round(eloWP*(100-rawD)); const rawA = 100-rawD-rawH;
+  const mp = markovAdjust(rawH, rawD, rawA, mk1, mk2);
+  const t1WP=mp.home, dP=mp.draw, t2WP=mp.away;
+  const shock = (t1s.shockGap+t2s.shockGap)/2 >= 5;
+  const scores = predictScorelineEnhanced(t1s, t2s, shock, fp, d1, d2, l1, l2);
+  const conf = computeConfidenceScore(t1s, t2s, mk1, mk2, fp);
+  const confColor = conf.score>=70?'var(--accent)':conf.score>=45?'var(--gold)':'var(--danger)';
+  const confLabel = conf.score>=70?'HIGH':conf.score>=45?'MEDIUM':'LOW';
+  const t1xG = estimateXG(t1, matches); const t2xG = estimateXG(t2, matches);
 
-  const textToCopy = newMatches.map(m => m.raw).join("\n");
+  const statsPayload = `HOME: ${t1} | ELO:${Math.round(eloRatings[t1])} | Games:${t1s.total} | Form:${t1s.formSeq.join('')} | λ:${l1.scored.toFixed(2)} scored / ${d1.scored.toFixed(2)} decay | Concede:${t1s.avgConcede} | GD:${t1s.gd} | H:${t1s.homeStats.W}W${t1s.homeStats.D}D${t1s.homeStats.L}L | A:${t1s.awayStats.W}W${t1s.awayStats.D}D${t1s.awayStats.L}L | CS:${t1s.cs}/${t1s.total} | xG:${t1xG} | BTTS6:${t1s.bts} | O2.5-6:${t1s.o25} | Markov:${mk1.lastResult}→W${(mk1.chain[mk1.lastResult]?.W*100||0).toFixed(0)}D${(mk1.chain[mk1.lastResult]?.D*100||0).toFixed(0)}L${(mk1.chain[mk1.lastResult]?.L*100||0).toFixed(0)}
+AWAY: ${t2} | ELO:${Math.round(eloRatings[t2])} | Games:${t2s.total} | Form:${t2s.formSeq.join('')} | λ:${l2.scored.toFixed(2)} scored / ${d2.scored.toFixed(2)} decay | Concede:${t2s.avgConcede} | GD:${t2s.gd} | H:${t2s.homeStats.W}W${t2s.homeStats.D}D${t2s.homeStats.L}L | A:${t2s.awayStats.W}W${t2s.awayStats.D}D${t2s.awayStats.L}L | CS:${t2s.cs}/${t2s.total} | xG:${t2xG} | BTTS6:${t2s.bts} | O2.5-6:${t2s.o25} | Markov:${mk2.lastResult}→W${(mk2.chain[mk2.lastResult]?.W*100||0).toFixed(0)}D${(mk2.chain[mk2.lastResult]?.D*100||0).toFixed(0)}L${(mk2.chain[mk2.lastResult]?.L*100||0).toFixed(0)}
+PROBS: ELO-base ${rawH}/${rawD}/${rawA}% → Markov-blend ${t1WP}%/${dP}%/${t2WP}% | Confidence:${conf.score}/100 (${confLabel}) | RNG matches:${fp.total}
+SCORELINES: ${scores.map(([s,p])=>`${s}:${(p*100).toFixed(1)}%`).join(' ')}
+H2H(last ${h2h.length}): ${h2h.map(m=>`${m.homeTeam} ${m.homeScore}-${m.awayScore} ${m.awayTeam}`).join(' | ')||'None'}`;
 
-  navigator.clipboard.writeText(textToCopy).then(() => {
-    alert(`✅ Copied ${newMatches.length} new match${newMatches.length > 1 ? "es" : ""}.`);
-    const newestTimestamp = Math.max(...newMatches.map(m => m.timestamp));
-    localStorage.setItem("lastCopied", newestTimestamp.toString());
-  }).catch(() => {
-    alert("❌ Failed to copy.");
+  out.innerHTML = `
+    <div class="fix-hero">
+      <div class="fix-team" style="color:var(--accent)">${t1}</div>
+      <div class="fix-vs">VS</div>
+      <div class="fix-team" style="color:var(--danger)">${t2}</div>
+    </div>
+    <div class="acc-panel">
+      <div class="acc-title">5-Layer Accuracy Engine</div>
+      <div class="acc-grid">
+        <div class="acc-item"><div class="acc-lbl">Sample Gate</div><div class="acc-val g">✓ PASS</div><div class="acc-sub">${minG} games min</div></div>
+        <div class="acc-item"><div class="acc-lbl">RNG Fingerprint</div><div class="acc-val ${fp.total>50?'g':'a'}">${fp.total} matches</div><div class="acc-sub">${fp.total>50?'Strong dataset':'Building'}</div></div>
+        <div class="acc-item"><div class="acc-lbl">Markov Signal</div><div class="acc-val a">${mk1.lastResult}→? / ${mk2.lastResult}→?</div><div class="acc-sub">Blended states</div></div>
+        <div class="acc-item"><div class="acc-lbl">Decay Factor</div><div class="acc-val g">λ ${DECAY_FACTOR}</div><div class="acc-sub">Recent bias active</div></div>
+        <div class="acc-item"><div class="acc-lbl">Rolling Lambda</div><div class="acc-val g">${l1.scored.toFixed(1)} / ${l2.scored.toFixed(1)}</div><div class="acc-sub">Last ${LAMBDA_WINDOW} games</div></div>
+      </div>
+      <div class="conf-meter">
+        <div class="conf-row"><span>Overall Confidence</span><span style="color:${confColor};font-weight:500">${confLabel} — ${conf.score}/100</span></div>
+        <div class="conf-bar"><div class="conf-fill" style="width:${conf.score}%;background:${confColor}"></div></div>
+      </div>
+    </div>
+    <div class="prob-wrap" style="padding:0 2px;margin-top:18px">
+      <div class="prob-lr">
+        <span>${t1} <strong style="color:var(--accent)">${t1WP}%</strong></span>
+        <span>Draw <strong style="color:var(--gold)">${dP}%</strong></span>
+        <span>${t2} <strong style="color:var(--danger)">${t2WP}%</strong></span>
+      </div>
+      <div class="prob-bar">
+        <div class="prob-seg h" style="width:${t1WP}%"></div>
+        <div class="prob-seg d" style="width:${dP}%"></div>
+        <div class="prob-seg a" style="width:${t2WP}%"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.6rem;color:var(--txt-3);margin-top:5px">ELO base ${rawH}/${rawD}/${rawA}% → Markov-blended ${t1WP}/${dP}/${t2WP}%</div>
+    </div>
+    <div class="sec-title" style="margin-top:22px">Bias-Adjusted Scorelines</div>
+    <div style="font-family:var(--mono);font-size:0.66rem;color:var(--txt-3);margin-bottom:7px">Poisson × RNG fingerprint × rolling lambda</div>
+    <div class="score-grid">${scores.map(([s,p])=>`<div class="score-chip">${s}<span class="pct">${(p*100).toFixed(1)}%</span></div>`).join('')}</div>
+    <div class="sec-title" style="margin-top:22px"><span class="ai-badge">Grok AI Analysis</span></div>
+    <div class="ai-loading"><div class="ai-spin"></div>Grok is analyzing the fixture…</div>
+    <div id="aiResponseBox" class="ai-out streaming" style="display:none"></div>
+    <div id="postControls" style="display:none"></div>
+  `;
+
+  const grokPrompt = `You are analyzing a VIRTUAL football simulation (RNG-driven, not real football). Analyze this fixture and provide a structured prediction report.\n\n${statsPayload}\n\nUse the Markov-blended probabilities and RNG fingerprint-adjusted scorelines as primary signals.\n\nStructure your response exactly as:\n### Match Verdict\nOverall prediction with most likely outcome and confidence level.\n\n### Key Statistical Edge\n3-4 bullet points on the strongest signals — prioritize Markov states and decay averages.\n\n### RNG Pattern Analysis\nWhat Markov last states and rolling lambda suggest about momentum.\n\n### Betting Markets\nFor each: state likely outcome with brief reasoning based on bias-adjusted scorelines:\n- Result (1/X/2), Both Teams to Score, Over/Under 2.5 Goals, Top scoreline to back\n\n### Risk Assessment\nRate confidence (High/Medium/Low) — factor in ${conf.score}/100 overall score. Main risk factors.\n\n### Recommended Bets\n2-3 specific bets ranked by confidence, grounded in the stats above.`;
+
+  try {
+    const response = await fetch(`${SERVER_URL}/api/grok/predict`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: grokPrompt }) });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || 'Server error');
+    const text = data.text || 'No response.';
+    const rendered = renderMarkdown(text);
+    out.querySelector('.ai-loading')?.remove();
+    const rb = out.querySelector('#aiResponseBox');
+    rb.innerHTML = rendered; rb.style.display='block'; rb.classList.remove('streaming');
+    currentPrediction = { homeTeam:t1, awayTeam:t2, aiText:text, probabilities:{home:t1WP,draw:dP,away:t2WP}, scores:scores.map(([s,p])=>({score:s,prob:(p*100).toFixed(1)})), confidence:conf.score };
+    renderPostControls(out.querySelector('#postControls'), t1, t2);
+  } catch (err) {
+    const al = out.querySelector('.ai-loading');
+    if (al) al.innerHTML = `<span style="color:var(--danger);font-family:var(--mono);font-size:0.78rem">⚠ AI request failed: ${err.message}</span>`;
+    currentPrediction = { homeTeam:t1, awayTeam:t2, aiText:'', probabilities:{home:t1WP,draw:dP,away:t2WP}, scores:scores.map(([s,p])=>({score:s,prob:(p*100).toFixed(1)})), confidence:conf.score };
+    renderPostControls(out.querySelector('#postControls'), t1, t2);
+  }
+}
+
+/* ══ POST CONTROLS ══ */
+function buildMarketOptions() { return ILEAGUE_MARKETS.map(g=>`<optgroup label="${g.group}">${g.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</optgroup>`).join(''); }
+function getCurrentTime() { const n=new Date(); return n.toTimeString().substring(0,5); }
+function getCountdownText(t) {
+  const now=new Date(); const [h,m]=t.split(':').map(Number); const target=new Date(now); target.setHours(h,m,0,0);
+  const diff=Math.floor((target-now)/1000);
+  if(diff<0) return {text:'Kick-off passed',past:true};
+  if(diff<60) return {text:`in ${diff}s`,past:false};
+  return {text:`in ${Math.floor(diff/60)}m ${diff%60}s`,past:false};
+}
+function renderPostControls(container, t1, t2) {
+  if (!container) return;
+  container.style.display='block';
+  container.innerHTML=`
+    <div class="post-ctrl">
+      <div class="post-hd">Post Tip to Public Page</div>
+      <div class="post-tip-row">
+        <div>
+          <label class="fld">Market / Tip</label>
+          <select style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);color:var(--txt);font-family:var(--mono);font-size:0.85rem;padding:10px 13px;outline:none" id="tipMarketSelect" onchange="updatePostPreview()">
+            <option value="">— Choose market —</option>
+            ${buildMarketOptions()}
+          </select>
+        </div>
+        <div>
+          <label class="fld">Kick-off</label>
+          <input class="kickoff-in" type="time" id="postKickoff" value="${getCurrentTime()}" oninput="updatePostPreview()">
+        </div>
+      </div>
+      <div class="prev-strip" id="postPreviewStrip" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="time-badge" id="ppTime">${getCurrentTime()}</span>
+          <span class="prev-match">${t1} vs ${t2}</span>
+          <span class="prev-tip-pill" id="ppTip">—</span>
+          <span id="ppCountdown"></span>
+        </div>
+        <button class="btn-copy" id="previewCopyBtn" onclick="copyPreviewTip()" title="Copy tip to clipboard">⎘ Copy</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-post" id="postBtn" onclick="postTipToPublic()" disabled>⬡ Post Tip Live</button>
+        <span id="postFeedback" style="font-family:var(--mono);font-size:0.7rem"></span>
+      </div>
+    </div>`;
+  updatePostPreview();
+  if (window._postInterval) clearInterval(window._postInterval);
+  window._postInterval = setInterval(updatePostPreview, 5000);
+}
+function updatePostPreview() {
+  const mkt = document.getElementById('tipMarketSelect')?.value||'';
+  const ko = document.getElementById('postKickoff')?.value||getCurrentTime();
+  const ppTime=document.getElementById('ppTime'); const ppTip=document.getElementById('ppTip');
+  const ppCd=document.getElementById('ppCountdown'); const pb=document.getElementById('postBtn');
+  if(ppTime) ppTime.textContent=ko; if(ppTip) ppTip.textContent=mkt||'—';
+  if(ppCd) { const {text,past}=getCountdownText(ko); ppCd.textContent=text; ppCd.className=`cd ${past?'past':'future'}`; }
+  if(pb) pb.disabled=!mkt;
+}
+async function postTipToPublic() {
+  if (!currentPrediction) { toast('Run AI analysis first'); return; }
+  const mkt = document.getElementById('tipMarketSelect')?.value;
+  const ko = document.getElementById('postKickoff')?.value||getCurrentTime();
+  if (!mkt) { toast('Select a market first'); return; }
+  const btn=document.getElementById('postBtn'); const fb=document.getElementById('postFeedback');
+  btn.disabled=true; btn.textContent='⏳ Posting…'; fb.innerHTML='';
+  const payload = {
+    tip:mkt, selection:mkt, market:mkt, pick:mkt, tipText:mkt,
+    kickoff:ko, kickOff:ko, kick_off:ko, matchTime:ko, time:ko,
+    homeTeam:currentPrediction.homeTeam, awayTeam:currentPrediction.awayTeam,
+    matchLabel:`${currentPrediction.homeTeam} vs ${currentPrediction.awayTeam}`,
+    match:`${currentPrediction.homeTeam} vs ${currentPrediction.awayTeam}`,
+    matchDate:new Date().toISOString().split('T')[0],
+    probabilities:currentPrediction.probabilities, probs:currentPrediction.probabilities,
+    confidence:currentPrediction.confidence, conf:currentPrediction.confidence,
+  };
+  try {
+    const res = await fetch(`${SERVER_URL}/api/tips/post`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error||'Server error');
+    btn.textContent='✓ Posted!'; btn.style.background='var(--accent-d)';
+    fb.innerHTML=`<span style="color:var(--accent)">✓ ${currentPrediction.homeTeam} vs ${currentPrediction.awayTeam} — ${mkt} @ ${ko}</span>`;
+    toast(`✓ Tip posted — ${ko}`); loadPostedCount();
+    setTimeout(()=>{btn.disabled=false;btn.textContent='⬡ Post Again';btn.style.background='';},3000);
+  } catch(err) {
+    btn.disabled=false; btn.textContent='⬡ Post Tip Live';
+    fb.innerHTML=`<span style="color:var(--danger)">✗ ${err.message}</span>`;
+    toast('Post failed — check server');
+  }
+}
+
+/* ══ COPY HELPERS ══ */
+function copyTip(time, match, tip, btnId) {
+  const text = [time, match, tip].filter(Boolean).join('\n');
+  const btn = document.getElementById(btnId);
+  const doCopy = () => {
+    if (btn) { btn.textContent = '✓ Copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000); }
+    toast('✓ Tip copied to clipboard');
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(doCopy).catch(() => { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); });
+  } else { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); }
+}
+function copyPreviewTip() {
+  const time = document.getElementById('ppTime')?.textContent || '';
+  const tip = document.getElementById('ppTip')?.textContent || '';
+  const matchEl = document.querySelector('#postPreviewStrip .prev-match');
+  const match = matchEl?.textContent?.trim() || '';
+  if (!tip || tip === '—') { toast('Select a market first'); return; }
+  const text = [time, match, tip].filter(Boolean).join('\n');
+  const btn = document.getElementById('previewCopyBtn');
+  const doCopy = () => {
+    if (btn) { btn.textContent = '✓ Copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000); }
+    toast('✓ Tip preview copied');
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(doCopy).catch(() => { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); });
+  } else { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); }
+}
+function copyAllTips(tipsJson) {
+  let tips; try { tips = typeof tipsJson === 'string' ? JSON.parse(tipsJson) : tipsJson; } catch(e) { toast('Could not parse tips'); return; }
+  if (!tips || !tips.length) { toast('No tips to copy'); return; }
+  const text = tips.map(t => { const match = t.matchLabel || ((t.homeTeam||'') + ' vs ' + (t.awayTeam||'')); return [t.kickoff, match, t.tip].filter(Boolean).join(' · '); }).join('\n');
+  const btn = document.getElementById('copyAllBtn');
+  const doCopy = () => {
+    if (btn) { btn.textContent = `✓ Copied ${tips.length}`; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '⎘ Copy All'; btn.classList.remove('copied'); }, 2500); }
+    toast(`✓ All ${tips.length} tips copied`);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(doCopy).catch(() => { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); });
+  } else { const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);doCopy(); }
+}
+
+/* ══ RNG FINGERPRINT TAB ══ */
+function renderFingerprintTab() {
+  const matches = loadMatches(); const out = document.getElementById('fingerprintOutput');
+  if (matches.length < 10) { out.innerHTML='<div class="empty"><span class="empty-ico">⊕</span>Need at least 10 matches</div>'; return; }
+  const fp = buildFingerprintTable(matches);
+  const sorted = Object.entries(fp.bias).sort((a,b)=>b[1].count-a[1].count).slice(0,20);
+  const maxC = sorted[0]?.[1].count||1;
+  const over = sorted.filter(([,b])=>b.ratio>1.3); const under = sorted.filter(([,b])=>b.ratio<0.7);
+  out.innerHTML=`
+    <div class="g2" style="gap:18px;margin-bottom:18px">
+      <div class="card">
+        <div class="card-hd">Dataset Summary</div>
+        <div class="stat-row"><span class="stat-l">Total matches</span><span class="stat-v">${fp.total}</span></div>
+        <div class="stat-row"><span class="stat-l">Avg home goals</span><span class="stat-v">${fp.avgHome?.toFixed(2)||'—'}</span></div>
+        <div class="stat-row"><span class="stat-l">Avg away goals</span><span class="stat-v">${fp.avgAway?.toFixed(2)||'—'}</span></div>
+        <div class="stat-row"><span class="stat-l">Unique scorelines</span><span class="stat-v">${Object.keys(fp.freq).length}</span></div>
+        <div class="stat-row"><span class="stat-l">Overrepresented</span><span class="stat-v" style="color:var(--accent)">${over.length} scores</span></div>
+        <div class="stat-row"><span class="stat-l">Underrepresented</span><span class="stat-v" style="color:var(--danger)">${under.length} scores</span></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">RNG Bias Signals</div>
+        ${over.length?`<div style="font-family:var(--mono);font-size:0.65rem;color:var(--txt-3);margin-bottom:5px">Overrepresented (back these):</div>${over.slice(0,4).map(([s,b])=>`<div style="padding:3px 0;font-family:var(--mono);font-size:0.8rem"><span style="font-family:var(--display);font-size:1rem;font-weight:700;margin-right:8px">${s}</span><span class="pill pill-green">${b.ratio.toFixed(2)}× Poisson</span></div>`).join('')}`:'<div style="color:var(--txt-3);font-size:0.8rem">No strong over-representation</div>'}
+        ${under.length?`<div style="font-family:var(--mono);font-size:0.65rem;color:var(--txt-3);margin:10px 0 5px">Underrepresented (avoid):</div>${under.slice(0,3).map(([s,b])=>`<div style="padding:3px 0"><span style="font-family:var(--display);font-size:1rem;font-weight:700;margin-right:8px">${s}</span><span class="pill pill-red">${b.ratio.toFixed(2)}× Poisson</span></div>`).join('')}`:''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">Scoreline Frequency vs Poisson (top 20)</div>
+      ${sorted.map(([sc,b])=>{const bw=Math.round((b.count/maxC)*100);const bc=b.ratio>1.3?'over':b.ratio<0.7?'under':'neutral';const bt=b.ratio>1.3?`+${((b.ratio-1)*100).toFixed(0)}%`:b.ratio<0.7?`-${((1-b.ratio)*100).toFixed(0)}%`:'~0%';return`<div class="fp-row"><div class="fp-sc">${sc}</div><div class="fp-bar-w"><div class="fp-bar" style="width:${bw}%;background:${b.ratio>1.3?'var(--accent)':b.ratio<0.7?'var(--danger)':'var(--gold)'}"></div></div><div class="fp-pct">${b.count}×</div><div class="fp-pct">${(b.observed*100).toFixed(1)}%</div><span class="fp-bias ${bc}">${bt}</span></div>`;}).join('')}
+    </div>`;
+}
+
+/* ══ POSTED TIPS with bulk select/delete ══ */
+async function loadPostedTips() {
+  const out=document.getElementById('postedTipsOutput');
+  const dateKey=document.getElementById('postedDateFilter')?.value||new Date().toISOString().split('T')[0];
+  out.innerHTML='<div class="loading"><div class="spinner"></div>Loading posted tips…</div>';
+  try {
+    const res=await fetch(`${SERVER_URL}/api/tips/public?date=${dateKey}`); const data=await res.json();
+    if(!data.success) throw new Error(data.error);
+    const tips=data.tips||[]; document.getElementById('postedCount').textContent=tips.length;
+    if(!tips.length){out.innerHTML=`<div class="empty"><span class="empty-ico">≡</span>No tips posted for ${dateKey}</div>`;return;}
+
+    const tipsEncoded = encodeURIComponent(JSON.stringify(tips));
+
+    out.innerHTML=`<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="card-hd" style="margin-bottom:0">${tips.length} tip${tips.length!==1?'s':''} for ${dateKey}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-copy" id="copyAllBtn" onclick="copyAllTips(decodeURIComponent('${tipsEncoded}'))">⎘ Copy All</button>
+          <button class="btn btn-sm btn-danger" id="bulkDeleteBtn" style="display:none" onclick="bulkDeleteTips('${dateKey}')">✕ Delete Selected (<span id="selTipCount">0</span>)</button>
+        </div>
+      </div>
+      <div class="select-all-row">
+        <input type="checkbox" class="sel-cb" id="selectAllTips" onchange="toggleSelectAll(this)">
+        <label for="selectAllTips" class="sel-label">Select all</label>
+        <span id="selCountLabel" style="font-family:var(--mono);font-size:0.65rem;color:var(--txt-3);margin-left:4px"></span>
+      </div>
+      ${tips.map((tip,i)=>{
+        const match = tip.matchLabel||(tip.homeTeam+' vs '+tip.awayTeam);
+        const safeMatch = match.replace(/'/g,"\\'");
+        const safeTip = (tip.tip||'').replace(/'/g,"\\'");
+        const safeTime = (tip.kickoff||'').replace(/'/g,"\\'");
+        const resColor = tip.result==='win'?'var(--accent)':tip.result==='loss'?'var(--danger)':'var(--txt-3)';
+        const resLabel = tip.result && tip.result!=='pending' ? ` · <span style="color:${resColor};font-weight:500">${tip.result.toUpperCase()}</span>` : '';
+        return `<div class="tip-row" id="tiprow-${i}">
+          <div class="tip-cb-wrap">
+            <input type="checkbox" class="sel-cb tip-sel-cb" data-id="${tip.id}" data-idx="${i}" onchange="updateBulkBar()">
+            <div style="flex:1">
+              <div class="tip-match">${tip.kickoff?`<span class="time-badge" style="margin-right:9px;font-size:0.8rem">${tip.kickoff}</span>`:''} ${match}</div>
+              <div class="tip-meta">${tip.tip?`<span style="color:var(--accent);font-weight:500">${tip.tip}</span> · `:''}${new Date(tip.postedAt).toLocaleTimeString()}${resLabel}</div>
+            </div>
+            <div class="tip-actions">
+              <button class="btn-copy" id="ctip-${i}" onclick="copyTip('${safeTime}','${safeMatch}','${safeTip}','ctip-${i}')">⎘</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteTip('${tip.id}','${dateKey}')">✕</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } catch(err){out.innerHTML=`<div class="empty"><span class="empty-ico">⚠</span>Failed: ${err.message}</div>`;}
+}
+
+function updateBulkBar() {
+  const cbs = document.querySelectorAll('.tip-sel-cb');
+  const checked = [...cbs].filter(c => c.checked);
+  const btn = document.getElementById('bulkDeleteBtn');
+  const selAll = document.getElementById('selectAllTips');
+  const cnt = document.getElementById('selTipCount');
+  const lbl = document.getElementById('selCountLabel');
+  if (btn) btn.style.display = checked.length ? 'inline-flex' : 'none';
+  if (cnt) cnt.textContent = checked.length;
+  if (lbl) lbl.textContent = checked.length ? `${checked.length} selected` : '';
+  if (selAll) {
+    selAll.checked = cbs.length > 0 && checked.length === cbs.length;
+    selAll.indeterminate = checked.length > 0 && checked.length < cbs.length;
+  }
+}
+
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.tip-sel-cb').forEach(c => c.checked = cb.checked);
+  updateBulkBar();
+}
+
+async function bulkDeleteTips(dateKey) {
+  const checked = [...document.querySelectorAll('.tip-sel-cb:checked')];
+  if (!checked.length) return;
+  openModal('Delete Selected Tips', `Permanently delete ${checked.length} tip${checked.length!==1?'s':''} from the public page?`, async () => {
+    let done = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/tips/${dateKey}/${cb.dataset.id}`, { method: 'DELETE' });
+        const d = await res.json();
+        if (d.success) done++; else fail++;
+      } catch { fail++; }
+    }
+    toast(`✓ Deleted ${done} tip${done!==1?'s':''}${fail?` (${fail} failed)`:''}`);
+    loadPostedTips();
   });
 }
 
-function searchResults() {
-  const term = document.getElementById("search").value.toLowerCase();
-  const filtered = allMatches.filter(m =>
-    (m.home + m.away + m.result + m.outcome + JSON.stringify(m.odds)).toLowerCase().includes(term)
-  );
-  const display = filtered.map(m => m.raw).join("\n");
-  document.getElementById("output").textContent = display || "No matches found.";
-  document.getElementById("matchCount").textContent = filtered.length;
+async function deleteTip(id, dateKey) {
+  openModal('Delete Tip', 'Remove this tip from the public page?', async () => {
+    try {
+      const res=await fetch(`${SERVER_URL}/api/tips/${dateKey}/${id}`,{method:'DELETE'});
+      const data=await res.json();
+      if(data.success){toast('Tip deleted');loadPostedTips();}
+      else toast('Delete failed: '+(data.error||'unknown'));
+    } catch(err){toast('Delete failed: '+err.message);}
+  });
 }
 
-function clearInputs() {
-  if (!confirm("Clear just the input fields?")) return;
-  document.querySelectorAll(".fixture-input, .result-input").forEach(t => t.value = "");
-  document.getElementById("search").value = "";
-  document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n") || "No analysis yet.";
-  document.getElementById("matchCount").textContent = allMatches.length;
+async function loadPostedCount() {
+  try {
+    const today=new Date().toISOString().split('T')[0];
+    const res=await fetch(`${SERVER_URL}/api/tips/public?date=${today}`); const data=await res.json();
+    if(data.success) document.getElementById('postedCount').textContent=(data.tips||[]).length;
+  } catch{}
 }
 
-function clearStored() {
-  if (!confirm("Clear everything including stored match history?")) return;
-  localStorage.removeItem("fixtures");
-  localStorage.removeItem("results");
-  localStorage.removeItem("allMatches");
-  localStorage.removeItem("lastCopied");
-  document.querySelectorAll(".fixture-input, .result-input").forEach(t => t.value = "");
-  document.getElementById("search").value = "";
-  document.getElementById("output").textContent = "No analysis yet.";
-  document.getElementById("matchCount").textContent = "0";
-  allMatches = [];
+/* ══ SAFE MATCHES ══ */
+function displaySafeMatches() {
+  const matches=loadMatches(); const out=document.getElementById('safeMatchesOutput');
+  const teams=[...new Set(matches.flatMap(m=>[m.homeTeam,m.awayTeam]))]; const results=[];
+  teams.forEach(team=>{
+    const tm=matches.filter(m=>m.homeTeam===team||m.awayTeam===team).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(tm.length<5) return;
+    const recent=tm.slice(0,5);
+    const scored=recent.map(m=>m.homeTeam===team?m.homeScore:m.awayScore);
+    const conceded=recent.map(m=>m.homeTeam===team?m.awayScore:m.homeScore);
+    const res=recent.map((m,i)=>scored[i]>conceded[i]?'W':scored[i]<conceded[i]?'L':'D');
+    const totals=recent.map(m=>m.homeScore+m.awayScore);
+    const dw=recent.map((_,i)=>Math.pow(DECAY_FACTOR,i)); const tW=dw.reduce((s,w)=>s+w,0);
+    const patterns=[];
+    if(recent.every(m=>m.homeScore>0&&m.awayScore>0)) patterns.push({label:'BTTS Yes',dc:dw.reduce((s,w,i)=>s+(recent[i].homeScore>0&&recent[i].awayScore>0?w:0),0)/tW});
+    if(totals.every(t=>t>2.5)) patterns.push({label:'Over 2.5',dc:dw.reduce((s,w,i)=>s+(totals[i]>2.5?w:0),0)/tW});
+    if(totals.every(t=>t>3.5)) patterns.push({label:'Over 3.5',dc:dw.reduce((s,w,i)=>s+(totals[i]>3.5?w:0),0)/tW});
+    if(totals.every(t=>t<2.5)) patterns.push({label:'Under 2.5',dc:dw.reduce((s,w,i)=>s+(totals[i]<2.5?w:0),0)/tW});
+    if(scored.every(g=>g>0)) patterns.push({label:'Scoring Streak',dc:dw.reduce((s,w,i)=>s+(scored[i]>0?w:0),0)/tW});
+    if(conceded.every(g=>g===0)) patterns.push({label:'Clean Sheet Run',dc:1.0});
+    if(res.every(r=>r==='W')) patterns.push({label:'Winning Streak',dc:1.0});
+    if(res.every(r=>r==='L')) patterns.push({label:'Losing Streak',dc:1.0});
+    if(res.every(r=>r==='D')) patterns.push({label:'Draw Streak',dc:1.0});
+    const sg=lastShockIndex(team,tm);
+    const bc=sg<=1?'red':sg<3?'amber':'';
+    const note=sg<=1?'⚠ Trend just broken — volatility expected':res.every(r=>r==='L')?'5-loss streak — statistical rebound due':sg<3?'Recent volatility — trend may shift':'Strong pattern — good confidence';
+    const cast=sg<=1?'Expect reversal or high variance next':res.every(r=>r==='W')?'Watch for draw/loss risk':res.every(r=>r==='L')?'Possible recovery match coming':'Trend continuation likely';
+    patterns.forEach(p=>results.push({team,pattern:p.label,dc:p.dc,matches:recent,res,bc,note,cast}));
+  });
+  if(!results.length){out.innerHTML='<div class="empty"><span class="empty-ico">⊙</span>No consistent 5-game patterns found — add more data</div>';return;}
+  out.innerHTML=results.sort((a,b)=>b.dc-a.dc).map(item=>{
+    const cp=Math.round(item.dc*100); const cc=cp>=80?'var(--accent)':cp>=60?'var(--gold)':'var(--danger)';
+    return`<div class="safe-card ${item.bc}">
+      <div class="safe-team">${item.team}<span class="pill pill-green" style="margin-left:8px">${item.pattern}</span><span style="font-family:var(--mono);font-size:0.63rem;margin-left:8px;color:${cc}">Decay conf: ${cp}%</span></div>
+      <div class="form-bar" style="margin:8px 0">${item.res.map(r=>`<div class="fd ${r}">${r}</div>`).join('')}</div>
+      <div style="font-family:var(--mono);font-size:0.72rem;color:var(--txt-3);margin-bottom:5px">${item.matches.map(m=>`${m.homeTeam} ${m.homeScore}-${m.awayScore} ${m.awayTeam}`).join(' · ')}</div>
+      <div class="safe-note">${item.note}</div>
+      <div class="safe-cast">${item.cast}</div>
+    </div>`;
+  }).join('');
 }
 
-window.onload = () => {
-  const savedFixtures = localStorage.getItem("fixtures");
-  const savedResults = localStorage.getItem("results");
-  const savedMatchData = localStorage.getItem("allMatches");
+/* ══ TEAM INTEL ══ */
+function renderTeamIntel() {
+  const matches=loadMatches(); const out=document.getElementById('teamIntelOutput');
+  if(!matches.length){out.innerHTML='<div class="empty"><span class="empty-ico">⊛</span>Add match data first</div>';return;}
+  const teams=[...new Set(matches.flatMap(m=>[m.homeTeam,m.awayTeam]))].sort();
+  out.innerHTML='<div class="scroll-area">'+teams.map(team=>{
+    const s=analyzeTeam(team,matches); const mk=buildMarkovChain(team,matches);
+    const d=decayWeightedAvgScore(team,matches); const l=rollingLambda(team,matches);
+    const elo=Math.round(eloRatings[team]||1500);
+    const wins=s.all.filter(m=>m.homeTeam===team?m.homeScore>m.awayScore:m.awayScore>m.homeScore).length;
+    const wp=((wins/Math.max(s.total,1))*100).toFixed(0);
+    const ggp=((s.all.filter(m=>m.homeScore>0&&m.awayScore>0).length/Math.max(s.total,1))*100).toFixed(0);
+    const o25p=((s.all.filter(m=>m.homeScore+m.awayScore>2.5).length/Math.max(s.total,1))*100).toFixed(0);
+    const ok=s.total>=MIN_SAMPLE;
+    const nW=(mk.chain[mk.lastResult]?.W*100||0).toFixed(0); const nD=(mk.chain[mk.lastResult]?.D*100||0).toFixed(0); const nL=(mk.chain[mk.lastResult]?.L*100||0).toFixed(0);
+    return`<div class="intel-card">
+      <div class="intel-name">${team}
+        <span style="font-family:var(--mono);font-size:0.68rem;background:rgba(74,222,128,0.1);color:var(--accent);padding:2px 8px;border-radius:3px">ELO ${elo}</span>
+        ${ok?'<span class="pill pill-green" style="font-size:0.58rem">Gate ✓</span>':`<span class="pill pill-red" style="font-size:0.58rem">Need ${MIN_SAMPLE-s.total} more</span>`}
+      </div>
+      <div class="form-bar" style="margin:7px 0">${s.formSeq.map(r=>`<div class="fd ${r}">${r}</div>`).join('')}</div>
+      <div class="intel-grid">
+        <div class="ig-item"><div class="ig-v">${s.total}</div><div class="ig-l">Games</div></div>
+        <div class="ig-item"><div class="ig-v">${wp}%</div><div class="ig-l">Win Rate</div></div>
+        <div class="ig-item"><div class="ig-v">${d.scored.toFixed(2)}</div><div class="ig-l">Decay ↑</div></div>
+        <div class="ig-item"><div class="ig-v">${d.conceded.toFixed(2)}</div><div class="ig-l">Decay ↓</div></div>
+        <div class="ig-item"><div class="ig-v">${l.scored.toFixed(2)}</div><div class="ig-l">λ Roll ${LAMBDA_WINDOW}g</div></div>
+        <div class="ig-item"><div class="ig-v">${ggp}%</div><div class="ig-l">BTTS</div></div>
+        <div class="ig-item"><div class="ig-v">${o25p}%</div><div class="ig-l">O2.5</div></div>
+        <div class="ig-item"><div class="ig-v">${s.cs}</div><div class="ig-l">Clean Sheets</div></div>
+        <div class="ig-item"><div class="ig-v">${mk.lastResult}</div><div class="ig-l">Last State</div></div>
+        <div class="ig-item"><div class="ig-v" style="font-size:0.72rem">${nW}/${nD}/${nL}</div><div class="ig-l">Next W/D/L</div></div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
 
-  if (savedFixtures) document.querySelector(".fixture-input").value = savedFixtures;
-  if (savedResults) document.querySelector(".result-input").value = savedResults;
-  if (savedMatchData) {
-    allMatches = JSON.parse(savedMatchData);
-    document.getElementById("output").textContent = allMatches.map(m => m.raw).join("\n");
-    document.getElementById("matchCount").textContent = allMatches.length;
+/* ══ COMPARE ══ */
+function compareTeamsHandler() {
+  const tA=document.getElementById('teamA').value; const tB=document.getElementById('teamB').value;
+  const out=document.getElementById('comparisonResult');
+  if(!tA||!tB||tA===tB){out.innerHTML='<div class="empty"><span class="empty-ico">⚠</span>Select two different teams</div>';return;}
+  const matches=loadMatches();
+  const sA=analyzeTeam(tA,matches); const sB=analyzeTeam(tB,matches);
+  const dA=decayWeightedAvgScore(tA,matches); const dB=decayWeightedAvgScore(tB,matches);
+  const lA=rollingLambda(tA,matches); const lB=rollingLambda(tB,matches);
+  const mkA=buildMarkovChain(tA,matches); const mkB=buildMarkovChain(tB,matches);
+  const wA=sA.all.filter(m=>m.homeTeam===tA?m.homeScore>m.awayScore:m.awayScore>m.homeScore).length;
+  const wB=sB.all.filter(m=>m.homeTeam===tB?m.homeScore>m.awayScore:m.awayScore>m.homeScore).length;
+  const wpA=((wA/Math.max(sA.total,1))*100).toFixed(1); const wpB=((wB/Math.max(sB.total,1))*100).toFixed(1);
+  const ggA=((sA.all.filter(m=>m.homeScore>0&&m.awayScore>0).length/Math.max(sA.total,1))*100).toFixed(1);
+  const ggB=((sB.all.filter(m=>m.homeScore>0&&m.awayScore>0).length/Math.max(sB.total,1))*100).toFixed(1);
+  const o25A=((sA.all.filter(m=>m.homeScore+m.awayScore>2.5).length/Math.max(sA.total,1))*100).toFixed(1);
+  const o25B=((sB.all.filter(m=>m.homeScore+m.awayScore>2.5).length/Math.max(sB.total,1))*100).toFixed(1);
+  const csA=((sA.cs/Math.max(sA.total,1))*100).toFixed(1); const csB=((sB.cs/Math.max(sB.total,1))*100).toFixed(1);
+  const eA=Math.round(eloRatings[tA]||1500); const eB=Math.round(eloRatings[tB]||1500);
+  const rA=(dA.scored-dA.conceded)+parseFloat(wpA)/100*3; const rB=(dB.scored-dB.conceded)+parseFloat(wpB)/100*3;
+  const winner=rA>rB?tA:rB>rA?tB:'Balanced — possible draw';
+  const h=(vA,vB,hi=true)=>{const better=hi?parseFloat(vA)>parseFloat(vB):parseFloat(vA)<parseFloat(vB);return[better?'hl':'',better?'':'hl'];};
+  const [ha_e,hb_e]=h(eA,eB); const [ha_wp,hb_wp]=h(wpA,wpB); const [ha_d,hb_d]=h(dA.scored,dB.scored);
+  const [ha_l,hb_l]=h(lA.scored,lB.scored); const [ha_c,hb_c]=h(sA.avgConcede,sB.avgConcede,false);
+  const [ha_g,hb_g]=h(sA.gd,sB.gd); const [ha_gg,hb_gg]=h(ggA,ggB); const [ha_o,hb_o]=h(o25A,o25B); const [ha_cs,hb_cs]=h(csA,csB);
+  const nA=`${(mkA.chain[mkA.lastResult]?.W*100||0).toFixed(0)}/${(mkA.chain[mkA.lastResult]?.D*100||0).toFixed(0)}/${(mkA.chain[mkA.lastResult]?.L*100||0).toFixed(0)}`;
+  const nB=`${(mkB.chain[mkB.lastResult]?.W*100||0).toFixed(0)}/${(mkB.chain[mkB.lastResult]?.D*100||0).toFixed(0)}/${(mkB.chain[mkB.lastResult]?.L*100||0).toFixed(0)}`;
+  out.innerHTML=`<div class="card"><table class="cmp-table">
+    <tr><th>Metric</th><th>${tA}</th><th>${tB}</th></tr>
+    <tr><td>ELO</td><td class="${ha_e}">${eA}</td><td class="${hb_e}">${eB}</td></tr>
+    <tr><td>Win Rate</td><td class="${ha_wp}">${wpA}%</td><td class="${hb_wp}">${wpB}%</td></tr>
+    <tr><td>Decay Avg Scored</td><td class="${ha_d}">${dA.scored.toFixed(2)}</td><td class="${hb_d}">${dB.scored.toFixed(2)}</td></tr>
+    <tr><td>Rolling λ (${LAMBDA_WINDOW}g)</td><td class="${ha_l}">${lA.scored.toFixed(2)}</td><td class="${hb_l}">${lB.scored.toFixed(2)}</td></tr>
+    <tr><td>Avg Conceded</td><td class="${ha_c}">${sA.avgConcede}</td><td class="${hb_c}">${sB.avgConcede}</td></tr>
+    <tr><td>Goal Diff/Game</td><td class="${ha_g}">${sA.gd}</td><td class="${hb_g}">${sB.gd}</td></tr>
+    <tr><td>BTTS %</td><td class="${ha_gg}">${ggA}%</td><td class="${hb_gg}">${ggB}%</td></tr>
+    <tr><td>Over 2.5 %</td><td class="${ha_o}">${o25A}%</td><td class="${hb_o}">${o25B}%</td></tr>
+    <tr><td>Clean Sheet %</td><td class="${ha_cs}">${csA}%</td><td class="${hb_cs}">${csB}%</td></tr>
+    <tr><td>Markov Last→Next W/D/L</td><td>${mkA.lastResult}→ ${nA}</td><td>${mkB.lastResult}→ ${nB}</td></tr>
+    <tr class="cmp-winner"><td>Edge</td><td colspan="2" style="color:var(--accent);font-weight:500">${winner}</td></tr>
+  </table></div>`;
+}
+
+/* ══ UI ══ */
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  (el||event.target).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='teams') renderTeamIntel();
+  if(name==='data') loadDataTab();
+  if(name==='posted'){const d=document.getElementById('postedDateFilter');if(!d.value)d.value=new Date().toISOString().split('T')[0];loadPostedTips();}
+  if(name==='checker'){const d=document.getElementById('checkerDateFilter');if(!d.value)d.value=new Date().toISOString().split('T')[0];updateHeaderStats();}
+}
+function toggleTheme() {
+  const l=document.documentElement.classList.toggle('light');
+  document.getElementById('themeIcon').textContent=l?'☽':'☀';
+  document.getElementById('themeLabel').textContent=l?'Dark':'Light';
+  localStorage.setItem('footyai_theme',l?'light':'dark');
+}
+let toastTimer;
+function toast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('footyai_theme')==='light'){
+    document.documentElement.classList.add('light');
+    document.getElementById('themeIcon').textContent='☽';
+    document.getElementById('themeLabel').textContent='Dark';
   }
-};
+  loadTeamSelects(); updateHeaderStats(); loadPostedCount();
+  document.getElementById('postedDateFilter').value=new Date().toISOString().split('T')[0];
+  document.getElementById('checkerDateFilter').value=new Date().toISOString().split('T')[0];
+  fetch(`${SERVER_URL}/api/esPLACEHOLDERpn/sync-status`).then(r=>r.json()).then(d=>{
+    const el=document.getElementById('fbStatus');
+    if(el){el.textContent=d.firebaseConnected?'✓ Connected':'✗ Not connected';el.style.color=d.firebaseConnected?'var(--accent)':'var(--danger)';}
+  }).catch(()=>{const el=document.getElementById('fbStatus');if(el){el.textContent='✗ Server offline';el.style.color='var(--danger)';}});
+});
 </script>
 </body>
-  </html>
+</html>
